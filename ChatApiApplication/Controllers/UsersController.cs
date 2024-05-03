@@ -1,6 +1,7 @@
 ﻿using ChatApiApplication.Data;
 using ChatApiApplication.DTO;
 using ChatApiApplication.Model;
+using ChatApiApplication.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,39 +11,45 @@ namespace ChatApiApplication.Controllers
     [Route("api/")]
     public class UsersController : Controller
     {
-        private readonly ChatAPIDbContext dbContext;
+        public IUserService _userService;
 
-        public UsersController(ChatAPIDbContext dbContext)
+        public UsersController(IUserService userservice)
         {
-            this.dbContext = dbContext;
+            _userService = userservice;
         }
 
         [HttpPost]
         [Route("register")]
         public async Task<IActionResult> RegisterUser(UsersDTO usersDTO)
         {
-            var users = new Users();
-            await dbContext.Users.AddAsync(users);
-            await dbContext.SaveChangesAsync();
-            return Ok(users);
+            bool isEmailUnique = await _userService.IsEmailUniqueAsync(usersDTO.Email);
+            if (isEmailUnique && !string.IsNullOrWhiteSpace(usersDTO.Email))
+            {
+                await _userService.AddUserAsync(usersDTO);
+                return Ok("User registered successfully");
+            }
+            else
+            {
+                return BadRequest("User failed to register");
+            }
+            
         }
 
-        [HttpPost]
+        /*[HttpPost]
         [Route("login")]
         public async Task<IActionResult> LoginUser(UsersDTO usersDTO)
         {
-            var users = new Users();
-            await dbContext.Users.AddAsync(users);
-            await dbContext.SaveChangesAsync();
-            return Ok(users);
+            await _userService.LoginUserAsync(usersDTO);
+            await _userService.SaveChangesAsync();
+            return Ok(UsersDTO);
         }
 
         [HttpGet]
         [Route("users")]
         public async Task<IActionResult> GetAllUsers(UsersDTO usersDTO)
         {
-            return Ok(await dbContext.Users.ToListAsync());
+            return Ok(await _userService.ToListAsync());
 
-        }
+        }*/
     }
 }

@@ -5,6 +5,7 @@ namespace ChatApiApplication.DTO
 {
     public class MessagesDTO
     {
+        [Key]
         public Guid SenderId { get; set; }
         [ForeignKey("UserId")]
         public Guid ReceiverId { get; set; }
