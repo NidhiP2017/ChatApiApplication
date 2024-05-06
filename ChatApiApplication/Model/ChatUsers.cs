@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ChatApiApplication.Model
 {
-    public class Users : IdentityUser
+    public class ChatUsers : IdentityUser
     {
         [Key]
         [Required]

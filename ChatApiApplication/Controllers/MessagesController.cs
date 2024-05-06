@@ -7,7 +7,7 @@ namespace ChatApiApplication.Controllers
     [Route("api/")]
     public class MessagesController : Controller
     {
-        private readonly ChatAPIDbContext _context;
+        public ChatAPIDbContext _context;
         public MessagesController(ChatAPIDbContext dbContext)
         {
             _context = dbContext;

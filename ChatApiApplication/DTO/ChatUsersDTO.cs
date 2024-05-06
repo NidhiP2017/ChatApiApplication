@@ -2,8 +2,12 @@
 
 namespace ChatApiApplication.DTO
 {
-    public class UsersDTO
+    public class ChatUsersDTO
     {
+        [Key]
+        [Required]
+        public Guid UserId { get; set; }
+
         [Required(ErrorMessage = "Full Name is required")]
         [RegularExpression(@"^[a-zA-Z\s]*$", ErrorMessage = "UserName must contain only letters and spaces")]
         public string UserName { get; set; }

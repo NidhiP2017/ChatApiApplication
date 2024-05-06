@@ -7,7 +7,7 @@ namespace ChatApiApplication
     public class AutoMapperProfiles : Profile
     {
         public AutoMapperProfiles() {
-            CreateMap<UsersDTO, Users>().ReverseMap();
+            CreateMap<ChatUsersDTO, ChatUsers>().ReverseMap();
         }
     }
 }

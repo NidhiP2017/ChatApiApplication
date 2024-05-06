@@ -6,7 +6,7 @@ namespace ChatApiApplication.Data
     public class ChatAPIDbContext : DbContext
     {
         public ChatAPIDbContext(DbContextOptions options) : base(options) { }
-        public DbSet<Users> Users { get; set; }
+        public DbSet<ChatUsers> ChatUsers { get; set; }
 
         public DbSet<Messages> Messages { get; set; }
     }

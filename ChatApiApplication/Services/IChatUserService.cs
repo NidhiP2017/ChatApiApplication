@@ -5,10 +5,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ChatApiApplication.Services
 {
-    public interface IUserService
+    public interface IChatUserService
     {
         Task<bool> IsEmailUniqueAsync(string email);
-        Task<IActionResult> AddUserAsync(UsersDTO usersDTO);
-        //Task LoginUser(Users user);        
+        Task<IActionResult> AddUserAsync(ChatUsersDTO usersDTO);
+        Task<IActionResult> GetAllUsersAsync();
+
+        Task<IActionResult> AuthenticateUser(ChatUserLoginDTO usersDTO);
+
     }
+
 }
