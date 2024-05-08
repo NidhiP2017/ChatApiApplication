@@ -10,8 +10,9 @@ namespace ChatApiApplication.Services
         Task<bool> IsEmailUniqueAsync(string email);
         Task<IActionResult> AddUserAsync(ChatUsersDTO usersDTO);
         Task<IActionResult> GetAllUsersAsync();
-
         Task<IActionResult> AuthenticateUser(ChatUserLoginDTO usersDTO);
+
+        public string GetToken();
 
     }
 

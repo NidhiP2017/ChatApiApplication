@@ -2,6 +2,7 @@
 using ChatApiApplication.DTO;
 using ChatApiApplication.Model;
 using ChatApiApplication.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ChatApiApplication.Controllers
 {
+    //[Authorize]
     [ApiController]
     [Route("api/")]
     public class ChatUsersController : Controller
@@ -22,21 +24,21 @@ namespace ChatApiApplication.Controllers
 
         [HttpPost]
         [Route("register")]
-        public async Task<IActionResult> RegisterUser(ChatUsersDTO usersDTO)
+        public async Task<IActionResult> RegisterUser(ChatUsersDTO chatUsersDTO)
         {
-            bool isEmailUnique = await _us.IsEmailUniqueAsync(usersDTO.Email);
+            bool isEmailUnique = await _us.IsEmailUniqueAsync(chatUsersDTO.Email);
             if (!isEmailUnique)
             {
                 return BadRequest("Registration failed because the email is already registered");
             }
-            else if (isEmailUnique && !string.IsNullOrWhiteSpace(usersDTO.Email))
+            else if (isEmailUnique && !string.IsNullOrWhiteSpace(chatUsersDTO.Email))
             {
-               await _us.AddUserAsync(usersDTO);
+               await _us.AddUserAsync(chatUsersDTO);
                 var userDtoResponse = new ChatUsersDTO
                 {
-                    UserId = usersDTO.UserId,
-                    UserName = usersDTO.UserName,
-                    Email = usersDTO.Email,
+                    UserId = chatUsersDTO.UserId,
+                    UserName = chatUsersDTO.UserName,
+                    Email = chatUsersDTO.Email,
                 };
 
                 return Ok(userDtoResponse);
