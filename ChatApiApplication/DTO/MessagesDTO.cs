@@ -14,6 +14,7 @@ namespace ChatApiApplication.DTO
         [Required]
         [StringLength(1000, MinimumLength = 2)]
         public string Content { get; set; }
+        
         public DateTime Timestamp { get; set; }
     }
 }

@@ -5,9 +5,8 @@ using ChatApiApplication.Data;
 using ChatApiApplication.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 
 internal class Program
@@ -19,12 +18,38 @@ internal class Program
         // Add services to the container.
 
         builder.Services.AddControllers();
+        builder.Services.AddHttpContextAccessor();
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+        builder.Services.AddSwaggerGen(option =>
+        {
+            option.SwaggerDoc("v1", new OpenApiInfo { Title = "Chat API", Version = "v1" });
+            option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                In = ParameterLocation.Header,
+                Description = "Please enter your JWT token into the textbox below",
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                BearerFormat = "JWT",
+                Scheme = "Bearer"
+            });
+            option.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+             {
+             new OpenApiSecurityScheme
+             {
+                 Reference = new OpenApiReference
+                 {
+                     Type=ReferenceType.SecurityScheme,
+                     Id="Bearer"
+                 }
+             },
+             new string[]{}
+        }
+        });
+        });
 
-        //builder.Services.AddTransient<CustomMiddleware>();
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
         {
@@ -44,7 +69,8 @@ internal class Program
             (options => options.UseSqlServer
             (builder.Configuration.GetConnectionString("ChatAPIConnectionString")));
 
-        builder.Services.AddScoped<IChatUserService, ChatUserService>();    
+        builder.Services.AddScoped<IChatUserService, ChatUserService>();  
+        builder.Services.AddScoped<IMessagesService, MessagesService>();
         var app = builder.Build();
         using var scope = app.Services.CreateScope();
         var services = scope.ServiceProvider;
@@ -62,6 +88,8 @@ internal class Program
             app.UseSwagger();
             app.UseSwaggerUI();
         }
+
+        app.UseMiddleware<CustomMiddleware>();
         
         app.UseHttpsRedirection();
 
@@ -73,17 +101,5 @@ internal class Program
 
         app.Run();
     }
-    /*public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
-    {
-        app.UseMiddleware<CustomMiddleware>();
-        // Configure logging
-        var configuration = builder.Configuration;
-        var loggingSection = configuration.GetSection("Logging");
-        // Configure logging
-        loggerFactory.AddConfiguration(loggingSection);
-        loggerFactory.AddConsole();
-        loggerFactory.AddFile("Logs/mylog-{Date}.txt");
-
-    }*/
-
+    
 }

@@ -3,7 +3,9 @@ using ChatApiApplication.DTO;
 using ChatApiApplication.Model;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace ChatApiApplication.Services
 {
@@ -37,6 +39,55 @@ namespace ChatApiApplication.Services
             }
 
         }
+
+        public async Task<IActionResult> EditMessageAsync(Guid msgId, UpdateMsgDTO uMsgDTO)
+        {
+            if (uMsgDTO != null)
+            {
+                var msg = await _appContext.Messages.FindAsync(uMsgDTO.MessageId);
+                if (msg != null)
+                {
+                    msg.Content = uMsgDTO.Content;
+                    await _appContext.SaveChangesAsync();
+                    return new OkObjectResult(msg);
+                }
+                else
+                {
+                    return new OkObjectResult("Empty Message");
+                }
+            }
+            else
+            {
+                return new OkObjectResult("Invalid Content");
+            }
+        }
+
+        public async Task<IActionResult> DeleteMessageAsync(Guid deleteMsgId)
+        {
+            if (deleteMsgId != null)
+            {
+                var msg = await _appContext.Messages.FindAsync(deleteMsgId);
+                if (msg != null)
+                {
+                    _appContext.Remove(msg);
+                    await _appContext.SaveChangesAsync();
+                    return new OkObjectResult("Message Deleted");
+                }
+                else
+                {
+                    return new OkObjectResult("Could Not find message to delete");
+                }
+            }
+            return new OkObjectResult("Blank Message ID");
+        }
+
+        /*public Task<IActionResult> RetriveMessageAsync(MessagesDTO msgDTO)
+        {
+            if(msgDTO != null)
+            {
+                var query = 
+            }
+        }*/
     }
     
 }

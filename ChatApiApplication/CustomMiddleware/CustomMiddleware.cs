@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using ChatApiApplication.Data;
+using System.Text;
 
 namespace ChatApiApplication.CustomMiddleware
 {
@@ -13,27 +14,22 @@ namespace ChatApiApplication.CustomMiddleware
             _logger = logger;
         }
 
-        public async Task Invoke(HttpContext context)
+        public async Task Invoke(HttpContext context, ChatAPIDbContext dbContext)
         {
-            // Capture IP address of the caller
             string ipAddress = context.Connection.RemoteIpAddress.ToString();
 
-            // Capture request body
-            string requestBody = await FormatRequest(context.Request);
+            string requestBody = context.Request.ToString();
 
-            // Capture time of call
             DateTime requestTime = DateTime.Now;
 
-            // Capture username (if authenticated)
             string username = context.User.Identity.Name ?? "Anonymous";
 
-            // Log the details
             _logger.LogInformation($"Request from IP: {ipAddress}, Time: {requestTime}, User: {username}, Body: {requestBody}");
 
             await _next(context);
         }
 
-        private async Task<string> FormatRequest(HttpRequest request)
+        /*private async Task<string> FormatRequest(HttpRequest request)
         {
             request.EnableBuffering();
             var body = request.Body;
@@ -45,7 +41,7 @@ namespace ChatApiApplication.CustomMiddleware
                 request.Body = body;
                 return requestBody;
             }
-        }
+        }*/
     }
 
     public static class ClassWithNoImplementationMiddleWareExtensions

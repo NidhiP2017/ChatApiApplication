@@ -1,25 +1,27 @@
 ﻿using ChatApiApplication.Data;
 using ChatApiApplication.DTO;
-using ChatApiApplication.Model;
 using ChatApiApplication.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace ChatApiApplication.Controllers
 {
-    //[Authorize]
     [ApiController]
     [Route("api/")]
     public class ChatUsersController : Controller
     {
         public readonly IChatUserService _us;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private string _jwtToken;
+        private readonly ChatAPIDbContext _chatAPIDbContext;
 
-        public ChatUsersController(IChatUserService userservice)
+        public ChatUsersController(IHttpContextAccessor httpContextAccessor, IChatUserService userservice, ChatAPIDbContext chatAPIDbContext)
         {
             _us = userservice;
+            _httpContextAccessor = httpContextAccessor;
+            _jwtToken = _httpContextAccessor.HttpContext.Request.Headers["Authorization"];
+            _chatAPIDbContext = chatAPIDbContext;
         }
 
         [HttpPost]
@@ -33,7 +35,7 @@ namespace ChatApiApplication.Controllers
             }
             else if (isEmailUnique && !string.IsNullOrWhiteSpace(chatUsersDTO.Email))
             {
-               await _us.AddUserAsync(chatUsersDTO);
+                await _us.AddUserAsync(chatUsersDTO);
                 var userDtoResponse = new ChatUsersDTO
                 {
                     UserId = chatUsersDTO.UserId,
@@ -49,15 +51,25 @@ namespace ChatApiApplication.Controllers
             }
             
         }
-
+        //[Authorize]
         [HttpGet]
         [Route("users")]
         public async Task<IActionResult> GetAllUsers()
         {
-            var GetAllUsersAsync = await _us.GetAllUsersAsync();
-            return Ok(GetAllUsersAsync);
+            _jwtToken = _httpContextAccessor.HttpContext.Request.Headers["Authorization"];
+            var userId = from u in _chatAPIDbContext.ChatUsers
+                         where u.AccessToken == _jwtToken
+                         select u.UserId;
+            if (_jwtToken != null)
+            {
+                var GetAllUsersAsync = await _us.GetAllUsersAsync(userId.ToString());
+                return Ok(GetAllUsersAsync);
+            } 
+            else 
+            { 
+                return BadRequest("Could not Authorize");  
+            }
         }
-    
         [HttpPost]
         [Route("login")]
         public async Task<IActionResult> LoginUser(ChatUserLoginDTO userDTO)

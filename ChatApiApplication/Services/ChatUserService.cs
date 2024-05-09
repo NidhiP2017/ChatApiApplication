@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Text;
 
@@ -43,9 +44,11 @@ namespace ChatApiApplication.Services
             return new OkResult();
         }
 
-        public async Task<IActionResult> GetAllUsersAsync()
+        public async Task<IActionResult> GetAllUsersAsync(string userId)
         {
-            var users = await _appContext.ChatUsers.ToListAsync();
+            Guid newUserId = new Guid("ec389003-ee90-493b-985c-08dc70273145");
+            var users = await _appContext.ChatUsers
+                        .Where(u => u.UserId != newUserId).ToListAsync();
             var usersList = users.Select(a => new ChatUsersDTO
             {
                 UserId = a.UserId,
