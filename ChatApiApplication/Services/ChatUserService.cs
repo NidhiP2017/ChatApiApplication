@@ -44,11 +44,10 @@ namespace ChatApiApplication.Services
             return new OkResult();
         }
 
-        public async Task<IActionResult> GetAllUsersAsync(string userId)
+        public async Task<IActionResult> GetAllUsersAsync(IQueryable<Guid> userId)
         {
-            Guid newUserId = new Guid("ec389003-ee90-493b-985c-08dc70273145");
             var users = await _appContext.ChatUsers
-                        .Where(u => u.UserId != newUserId).ToListAsync();
+                       .Where(u => u.UserId != userId.FirstOrDefault()).ToListAsync();
             var usersList = users.Select(a => new ChatUsersDTO
             {
                 UserId = a.UserId,

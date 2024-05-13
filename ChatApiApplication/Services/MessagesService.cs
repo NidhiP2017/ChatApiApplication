@@ -21,7 +21,6 @@ namespace ChatApiApplication.Services
         }
         public async Task<IActionResult> SendMessageAsync(MessagesDTO msgDTO)
         {
-            //Guid senderId = new Guid("a6d2530addc047ee830008dc6f22d88a");
             if (msgDTO != null)
             {
                 var newMsg = new Messages()
@@ -37,7 +36,17 @@ namespace ChatApiApplication.Services
             } else {
                 return new OkObjectResult("Invalid Content");
             }
+        }
 
+        public IActionResult GetMessage(Guid userId, Guid msgId)
+        {
+            var query = _appContext.Messages.FirstOrDefault(u => u.SenderId == userId && u.MessageId == msgId);
+            if (query == null)
+            {
+                return null ;
+            }
+
+            return (IActionResult)query;
         }
 
         public async Task<IActionResult> EditMessageAsync(Guid msgId, UpdateMsgDTO uMsgDTO)
@@ -80,14 +89,26 @@ namespace ChatApiApplication.Services
             }
             return new OkObjectResult("Blank Message ID");
         }
-
-        /*public Task<IActionResult> RetriveMessageAsync(MessagesDTO msgDTO)
+        
+        public async Task<IActionResult> RetriveConversationHistoryAsync(Guid userId, DateTime? before, int count, string sort)
         {
-            if(msgDTO != null)
+            //if (_jwtToken != null)
+            //{
+            var query = _appContext.Messages.Where(m => m.SenderId == userId);
+            if (before.HasValue)
             {
-                var query = 
+                query = query.Where(m => m.Timestamp < before.Value);
             }
-        }*/
+            query = sort.ToLower() == "asc" ? query.OrderBy(m => m.Timestamp) : query.OrderByDescending(m => m.Timestamp);
+            query = query.Take(count);
+            var messages = await query.ToListAsync();
+            return new OkObjectResult(messages);
+            /* }
+             else
+             {
+                 return BadRequest("Could not Authorize");
+             }*/
+        }
     }
     
 }

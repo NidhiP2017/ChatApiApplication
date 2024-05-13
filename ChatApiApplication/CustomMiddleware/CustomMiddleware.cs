@@ -1,5 +1,6 @@
 ﻿using ChatApiApplication.Data;
-using System.Text;
+using ChatApiApplication.Model;
+using Microsoft.EntityFrameworkCore;
 
 namespace ChatApiApplication.CustomMiddleware
 {
@@ -16,32 +17,27 @@ namespace ChatApiApplication.CustomMiddleware
 
         public async Task Invoke(HttpContext context, ChatAPIDbContext dbContext)
         {
-            string ipAddress = context.Connection.RemoteIpAddress.ToString();
 
-            string requestBody = context.Request.ToString();
-
-            DateTime requestTime = DateTime.Now;
-
-            string username = context.User.Identity.Name ?? "Anonymous";
-
-            _logger.LogInformation($"Request from IP: {ipAddress}, Time: {requestTime}, User: {username}, Body: {requestBody}");
-
+            string token = context.Request.Headers["Authorization"];
+            token = (token != null) ? token.Substring("Bearer ".Length).Trim() : "";
+            string username = await GetUsernameFromDatabase(dbContext, token);
+            Log log = new Log
+            {
+                IpAddress = context.Connection.RemoteIpAddress?.ToString(),
+                RequestBody = context.Request.ToString(),
+                TimeOfCall = DateTime.Now,
+                UserName = username
+            };
+            dbContext.Logs.Add(log);
+            await dbContext.SaveChangesAsync();
             await _next(context);
         }
 
-        /*private async Task<string> FormatRequest(HttpRequest request)
+        private async Task<string> GetUsernameFromDatabase(ChatAPIDbContext dbContext, object token)
         {
-            request.EnableBuffering();
-            var body = request.Body;
-
-            using (var reader = new StreamReader(body, Encoding.UTF8, true, 1024, true))
-            {
-                var requestBody = await reader.ReadToEndAsync();
-                body.Seek(0, SeekOrigin.Begin);
-                request.Body = body;
-                return requestBody;
-            }
-        }*/
+            var chatUser = await dbContext.ChatUsers.FirstOrDefaultAsync(u => u.AccessToken == token );
+            return chatUser != null ? chatUser.UserName : "Anonymous";
+        }
     }
 
     public static class ClassWithNoImplementationMiddleWareExtensions

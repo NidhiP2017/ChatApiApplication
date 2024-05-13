@@ -9,11 +9,10 @@ namespace ChatApiApplication.Services
     {
         Task<bool> IsEmailUniqueAsync(string email);
         Task<IActionResult> AddUserAsync(ChatUsersDTO usersDTO);
-        Task<IActionResult> GetAllUsersAsync(string userId);
+        Task<IActionResult> GetAllUsersAsync(IQueryable<Guid> userId);
         Task<IActionResult> AuthenticateUser(ChatUserLoginDTO usersDTO);
 
         public string GetToken();
-
     }
 
 }
