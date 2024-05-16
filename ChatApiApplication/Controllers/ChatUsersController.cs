@@ -12,16 +12,16 @@ namespace ChatApiApplication.Controllers
     public class ChatUsersController : Controller
     {
         public readonly IChatUserService _us;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         public string _jwtToken;
         private readonly ChatAPIDbContext _chatAPIDbContext;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public ChatUsersController(IHttpContextAccessor httpContextAccessor, IChatUserService userservice, ChatAPIDbContext chatAPIDbContext)
         {
             _us = userservice;
-            _httpContextAccessor = httpContextAccessor;
+            /*_httpContextAccessor = httpContextAccessor;
             _jwtToken = _httpContextAccessor.HttpContext.Request.Headers["Authorization"];
-            _jwtToken = (_jwtToken != null) ? (_jwtToken.Substring("Bearer ".Length).Trim()) : "";
+            _jwtToken = (_jwtToken != null) ? (_jwtToken.Substring("Bearer ".Length).Trim()) : "";*/
             _chatAPIDbContext = chatAPIDbContext;
             //_jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJKV1RTZXJ2aWNlQWNjZXNzVG9rZW4iLCJqdGkiOiI5ZmZiMmI0NC1lZGMyLTRjMzAtYmM1Mi04MTkzNjQ1Yjc0NzIiLCJpYXQiOiIxMS0wNS0yMDI0IDEwOjU4OjI2IiwiZXhwIjoxNzE1NDI1NzA2LCJpc3MiOiJKV1RBdXRoZW50aWNhdGlvblNlcnZlciIsImF1ZCI6IkpXVFNlcnZpY2VQb3N0bWFuQ2xpZW50In0.Ib5urJOc7eVXvMqQBPkml-cKJWgrIFuIB21cdcO7cjc";
         }
@@ -53,13 +53,13 @@ namespace ChatApiApplication.Controllers
             }
             
         }
-        //[Authorize]
+        [Authorize]
         [HttpGet]
         [Route("users")]
         public async Task<IActionResult> GetAllUsers()
         {
             if (_jwtToken != null) {
-                var uid = new Guid("f211ffcc-c369-42ee-79b7-08dc70aa19d8"); // temporary static sender ID
+                var uid = new Guid("1ac9689f-155c-4e33-c548-08dc73ea4971"); // temporary static sender ID
                 var userId = from u in _chatAPIDbContext.ChatUsers
                                  //where u.AccessToken == _jwtToken
                           where u.UserId == uid
@@ -79,6 +79,15 @@ namespace ChatApiApplication.Controllers
             var user = await _us.AuthenticateUser(userDTO);
             return Ok(user);
         }
-        
+
+        [HttpGet]
+        [Route("conversation/search")]
+        public async Task<IActionResult> SearchConversations(string query)
+        {
+            var msgs = await _us.SearchMsgs(query);
+            return Ok(msgs);
+        }
+
+
     }
 }

@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ChatApiApplication.Migrations
 {
     [DbContext(typeof(ChatAPIDbContext))]
-    [Migration("20240506101349_Initial Migration")]
+    [Migration("20240514074734_Initial Migration")]
     partial class InitialMigration
     {
         /// <inheritdoc />
@@ -33,6 +33,10 @@ namespace ChatApiApplication.Migrations
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
+
+                    b.Property<string>("AccessToken")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .HasColumnType("nvarchar(max)");
@@ -86,6 +90,34 @@ namespace ChatApiApplication.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("ChatUsers");
+                });
+
+            modelBuilder.Entity("ChatApiApplication.Model.Log", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("IpAddress")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RequestBody")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("TimeOfCall")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Logs");
                 });
 
             modelBuilder.Entity("ChatApiApplication.Model.Messages", b =>

@@ -38,7 +38,7 @@ namespace ChatApiApplication.Services
             }
         }
 
-        public IActionResult GetMessage(Guid userId, Guid msgId)
+        public Messages GetMessage(Guid userId, Guid msgId)
         {
             var query = _appContext.Messages.FirstOrDefault(u => u.SenderId == userId && u.MessageId == msgId);
             if (query == null)
@@ -46,7 +46,7 @@ namespace ChatApiApplication.Services
                 return null ;
             }
 
-            return (IActionResult)query;
+            return query;
         }
 
         public async Task<IActionResult> EditMessageAsync(Guid msgId, UpdateMsgDTO uMsgDTO)

@@ -28,16 +28,16 @@ namespace ChatApiApplication.Controllers
                         where u.AccessToken == _jwtToken
                         select u.UserId;
             userId = query.FirstOrDefault();
-
         }
 
-        [Authorize]
+        //[Authorize]
         [HttpPost]
         [Route("messages")]
         public async Task<IActionResult> SendMessage(MessagesDTO sendMsg)
         {
             if (sendMsg != null && _jwtToken != null )
             {
+                Guid userId = new Guid("3fa85f64-5717-4562-b3fc-2c963f66afa6");
                 sendMsg.SenderId = userId;
                 var sendNewMsg = await _ims.SendMessageAsync(sendMsg);
                 var msgDtoResponse = new MessagesDTO()
@@ -62,7 +62,7 @@ namespace ChatApiApplication.Controllers
         [Route("messages/{updateMsgId:guid}")]
         public async Task<IActionResult> EditMessage(Guid msgId, UpdateMsgDTO uMsgDTO)
         {
-            Guid userId = new Guid("f211ffcc-c369-42ee-79b7-08dc70aa19d8"); // temporary static sender ID
+            Guid userId = new Guid("1AC9689F-155C-4E33-C548-08DC73EA4971"); // temporary static sender ID
             var orgMsg =  _ims.GetMessage(userId, msgId);
 
             if (orgMsg!= null) { 
@@ -89,7 +89,7 @@ namespace ChatApiApplication.Controllers
 
         public async Task<IActionResult> DeleteMsg(Guid msgId)
         {
-            Guid userId = new Guid("f211ffcc-c369-42ee-79b7-08dc70aa19d8"); // temporary static sender ID
+            Guid userId = new Guid("1AC9689F-155C-4E33-C548-08DC73EA4971"); // temporary static sender ID
             var orgMsg = _ims.GetMessage(userId, msgId);
             if(orgMsg!= null) { 
                 var deleteMsg = await _ims.DeleteMessageAsync(msgId);

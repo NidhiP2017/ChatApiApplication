@@ -19,7 +19,7 @@ namespace ChatApiApplication.Controllers
             _httpContextAccessor = httpContextAccessor;
             _jwtToken = _httpContextAccessor.HttpContext.Request.Headers["Authorization"];
             _context = chatAPIDbContext;
-            _jwtToken = _jwtToken.Substring("Bearer ".Length).Trim();
+            _jwtToken = (_jwtToken != null) ? _jwtToken.Substring("Bearer ".Length).Trim() : "";
         }
 
         [HttpGet]

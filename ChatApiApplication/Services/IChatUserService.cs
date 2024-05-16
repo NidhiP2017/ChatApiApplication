@@ -12,6 +12,7 @@ namespace ChatApiApplication.Services
         Task<IActionResult> GetAllUsersAsync(IQueryable<Guid> userId);
         Task<IActionResult> AuthenticateUser(ChatUserLoginDTO usersDTO);
 
+        Task<List<MessagesDTO>> SearchMsgs(string msg);
         public string GetToken();
     }
 
