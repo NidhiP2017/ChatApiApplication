@@ -1,5 +1,5 @@
 using AutoMapper;
-using ChatApiApplication;
+using ChatApiApplication.Automapper;
 using ChatApiApplication.CustomMiddleware;
 using ChatApiApplication.Data;
 using ChatApiApplication.Hubs;
@@ -19,8 +19,14 @@ internal class Program
         // Add services to the container.
 
         builder.Services.AddControllers();
-        //builder.Services.AddSignalR();
+        builder.Services.AddSignalR();
         builder.Services.AddHttpContextAccessor();
+        MapperConfiguration mapperConfiguration = new MapperConfiguration(cfg =>
+        {
+            cfg.AddProfile(new AutoMapperProfileConfiguration());
+        });
+        IMapper mapper = mapperConfiguration.CreateMapper();
+        builder.Services.AddSingleton(mapper);
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
@@ -81,17 +87,6 @@ internal class Program
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-        });
-        builder.Services.AddAuthentication().AddGoogle(options =>
-        {
-            IConfigurationSection googleAuthNSection = builder.Configuration.GetSection("Authentication:Google");
-            options.ClientId = "1055043777002-t3albpi7if9q1537k5abk78q2reqp6ic.apps.googleusercontent.com"; // googleAuthNSection["ClientId"];
-            options.ClientSecret = "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";//googleAuthNSection["ClientSecret"];
-            //options.ClientId = googleAuthNSection["ClientId"];
-            //options.ClientSecret = googleAuthNSection["ClientSecret"];
-            options.CallbackPath = "/signin-google";
-            options.Scope.Add("openid");
-            options.Scope.Add("profile");
         }).AddJwtBearer(options =>
         {
             options.RequireHttpsMetadata = false;
@@ -104,17 +99,23 @@ internal class Program
                 ValidateIssuerSigningKey = true,
                 ClockSkew = TimeSpan.Zero,
                 ValidIssuer = builder.Configuration["Jwt:Issuer"],           // Replace with your token issuer
-                //ValidAudience = builder.Configuration["Jwt:Audience"],       // Replace with your token audience
-                ValidAudience = builder.Configuration["Jwt:Issuer"],
+                ValidAudience = builder.Configuration["Jwt:Audience"],       // Replace with your token audience
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])) // Replace with your secret key
             };
         });
-        builder.Services.AddMvc();
-        /*MapperConfiguration mapperConfiguration = new MapperConfiguration(cfg =>
+        builder.Services.AddAuthentication().AddGoogle(options =>
         {
-            cfg.AddProfile(new AutoMapperProfileConfiguration());
+            IConfigurationSection googleAuthNSection = builder.Configuration.GetSection("Authentication:Google");
+            options.ClientId = "1055043777002-t3albpi7if9q1537k5abk78q2reqp6ic.apps.googleusercontent.com"; // googleAuthNSection["ClientId"];
+            options.ClientSecret = "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";//googleAuthNSection["ClientSecret"];
+            //options.ClientId = googleAuthNSection["ClientId"];
+            //options.ClientSecret = googleAuthNSection["ClientSecret"];
+            options.CallbackPath = "/signin-google";
+            options.Scope.Add("openid");
+            options.Scope.Add("profile");
         });
-        IMapper mapper = mapperConfiguration.CreateMapper();*/
+        
+        builder.Services.AddMvc();
         builder.Services.AddAuthorization();
         builder.Services.AddDbContext<ChatAPIDbContext>
             (options => options.UseSqlServer
@@ -122,9 +123,6 @@ internal class Program
 
         builder.Services.AddScoped<IChatUserService, ChatUserService>();  
         builder.Services.AddScoped<IMessagesService, MessagesService>();
-        /*builder.Services.AddIdentity<IdentityUser, IdentityRole>()
-        .AddEntityFrameworkStores<ChatAPIDbContext>()
-        .AddDefaultTokenProviders();*/
         var app = builder.Build();
         using var scope = app.Services.CreateScope();
         var services = scope.ServiceProvider;
@@ -143,12 +141,8 @@ internal class Program
                 c.OAuthUsePkce();
            });
         }
-       /* app.UseRouting();
-        app.UseEndpoints(endpoints =>
-        {
-            endpoints.MapControllers();
-            endpoints.MapHub<ChatHub>("/chathub");
-        });*/
+        
+        app.MapHub<ChatHub>("chat-hub");
 
         app.UseMiddleware<CustomMiddleware>();
         

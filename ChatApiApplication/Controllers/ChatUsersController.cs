@@ -1,4 +1,5 @@
-﻿using ChatApiApplication.Data;
+﻿using AutoMapper;
+using ChatApiApplication.Data;
 using ChatApiApplication.DTO;
 using ChatApiApplication.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -15,6 +16,7 @@ namespace ChatApiApplication.Controllers
         public string _jwtToken;
         private readonly ChatAPIDbContext _chatAPIDbContext;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        
 
         public ChatUsersController(IHttpContextAccessor httpContextAccessor, IChatUserService userservice, ChatAPIDbContext chatAPIDbContext)
         {
@@ -23,7 +25,7 @@ namespace ChatApiApplication.Controllers
             _jwtToken = _httpContextAccessor.HttpContext.Request.Headers["Authorization"];
             _jwtToken = (_jwtToken != null) ? (_jwtToken.Substring("Bearer ".Length).Trim()) : "";*/
             _chatAPIDbContext = chatAPIDbContext;
-            //_jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJKV1RTZXJ2aWNlQWNjZXNzVG9rZW4iLCJqdGkiOiI5ZmZiMmI0NC1lZGMyLTRjMzAtYmM1Mi04MTkzNjQ1Yjc0NzIiLCJpYXQiOiIxMS0wNS0yMDI0IDEwOjU4OjI2IiwiZXhwIjoxNzE1NDI1NzA2LCJpc3MiOiJKV1RBdXRoZW50aWNhdGlvblNlcnZlciIsImF1ZCI6IkpXVFNlcnZpY2VQb3N0bWFuQ2xpZW50In0.Ib5urJOc7eVXvMqQBPkml-cKJWgrIFuIB21cdcO7cjc";
+            _jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJKV1RTZXJ2aWNlQWNjZXNzVG9rZW4iLCJqdGkiOiI5ZmZiMmI0NC1lZGMyLTRjMzAtYmM1Mi04MTkzNjQ1Yjc0NzIiLCJpYXQiOiIxMS0wNS0yMDI0IDEwOjU4OjI2IiwiZXhwIjoxNzE1NDI1NzA2LCJpc3MiOiJKV1RBdXRoZW50aWNhdGlvblNlcnZlciIsImF1ZCI6IkpXVFNlcnZpY2VQb3N0bWFuQ2xpZW50In0.Ib5urJOc7eVXvMqQBPkml-cKJWgrIFuIB21cdcO7cjc";
         }
 
         [HttpPost]
@@ -53,7 +55,7 @@ namespace ChatApiApplication.Controllers
             }
             
         }
-        [Authorize]
+        //[Authorize]
         [HttpGet]
         [Route("users")]
         public async Task<IActionResult> GetAllUsers()

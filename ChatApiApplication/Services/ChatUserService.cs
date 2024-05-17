@@ -18,10 +18,12 @@ namespace ChatApiApplication.Services
     {
         private readonly ChatAPIDbContext _appContext;
         private readonly IConfiguration _config;
+        private readonly IMapper _imapper;
 
-        public ChatUserService(ChatAPIDbContext context, IConfiguration config )
+        public ChatUserService(IMapper imapper, ChatAPIDbContext context, IConfiguration config )
         {
             _appContext = context;
+            _imapper = imapper;
             _config = config;
         }
 
@@ -94,7 +96,7 @@ namespace ChatApiApplication.Services
 
         public string GetToken()
         {
-            /*var claims = new[] {
+            var claims = new[] {
                         new Claim(JwtRegisteredClaimNames.Sub, _config["Jwt:Subject"]),
                         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                         new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString())
@@ -112,18 +114,8 @@ namespace ChatApiApplication.Services
 
             string AccessToken = new JwtSecurityTokenHandler().WriteToken(token);
 
-            return "Bearer "+AccessToken;*/
+            return AccessToken;
 
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken(_config["Jwt:Issuer"],
-              _config["Jwt:Issuer"],
-              null,
-              expires: DateTime.Now.AddMinutes(120),
-              signingCredentials: credentials);
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
         public async Task<List<MessagesDTO>> SearchMsgs(string msg)
@@ -138,26 +130,8 @@ namespace ChatApiApplication.Services
                 if (conversations.Any())
                 {
                     List<MessagesDTO> matchedConversations = new List<MessagesDTO>();
-                    /*matchedConversations = _mapper.Map<List<MessagesDTO>>(conversations);
-                        return matchedConversations;*/
-                    foreach (var conversation in conversations)
-                    {
-                        var messageDTOs = conversations.Select(m => new MessagesDTO
-                        {
-                            MessageId = conversation.MessageId,
-                            Content = conversation.Content,
-                            SenderId = conversation.SenderId,
-                            ReceiverId = conversation.ReceiverId,
-                            Timestamp = conversation.Timestamp
-                        }).ToList();
-                        return (messageDTOs);
-                        /*var newmessageDTOs = new MessagesDTO
-                        {
-                            MessageId = messageDTOs
-                        };
-                        matchedConversations.Add(newmessageDTOs);*/
-                    }
-                    return new List<MessagesDTO>();
+                    matchedConversations = _imapper.Map<List<MessagesDTO>>(conversations);
+                    return matchedConversations;
                 }
                 else
                 {
