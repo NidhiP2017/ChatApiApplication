@@ -1,12 +1,14 @@
 ﻿using ChatApiApplication.Data;
 using ChatApiApplication.Model;
 using ChatApiApplication.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChatApiApplication.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class LogController : ControllerBase
@@ -37,7 +39,14 @@ namespace ChatApiApplication.Controllers
             
             var logs = query.ToList();
 
-            return Ok(logs);
+            if(logs.Count >0)
+            {
+                return Ok(logs);
+            }
+            else
+            {
+                return NotFound($"No records found within date range from {startTime} to {endTime}");
+            }
         }
     }
 

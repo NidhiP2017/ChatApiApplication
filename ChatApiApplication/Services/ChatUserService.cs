@@ -2,15 +2,12 @@
 using ChatApiApplication.Data;
 using ChatApiApplication.DTO;
 using ChatApiApplication.Model;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace ChatApiApplication.Services
 {
@@ -18,13 +15,16 @@ namespace ChatApiApplication.Services
     {
         private readonly ChatAPIDbContext _appContext;
         private readonly IConfiguration _config;
+        private readonly ITokenService tokenService;
         private readonly IMapper _imapper;
 
-        public ChatUserService(IMapper imapper, ChatAPIDbContext context, IConfiguration config )
+        public ChatUserService(IMapper imapper, ChatAPIDbContext context, IConfiguration config,
+            ITokenService tokenService)
         {
             _appContext = context;
             _imapper = imapper;
             _config = config;
+            this.tokenService = tokenService;
         }
 
         public async Task<bool> IsEmailUniqueAsync(string email)
@@ -32,7 +32,7 @@ namespace ChatApiApplication.Services
             return await _appContext.ChatUsers.AllAsync(u => u.Email != email);
         }
 
-        public async Task<IActionResult> AddUserAsync(ChatUsersDTO usersDTO)
+        public async Task<IActionResult> AddUserAsync(RegisterDto usersDTO)
         {
             var encryptPwdBytes = Encoding.UTF8.GetBytes(usersDTO.Password);
             var encryptedPwd = Convert.ToBase64String(encryptPwdBytes);
@@ -41,7 +41,7 @@ namespace ChatApiApplication.Services
                 UserName = usersDTO.UserName,
                 Email = usersDTO.Email,
                 Password = encryptedPwd,
-                AccessToken = GetToken()
+                AccessToken = " "
             };
             await _appContext.ChatUsers.AddAsync(newUser);
             await _appContext.SaveChangesAsync();
@@ -52,17 +52,17 @@ namespace ChatApiApplication.Services
         {
             var users = await _appContext.ChatUsers
                        .Where(u => u.UserId != userId.FirstOrDefault()).ToListAsync();
-            var usersList = users.Select(a => new ChatUsersDTO
+            var usersList = users.Select(a => new ChatUserListDto
             {
                 UserId = a.UserId,
                 UserName = a.UserName,
-                Email = a.Email
+                Email = a.Email,
             });
 
             return new OkObjectResult(usersList);
         }
 
-        public async Task<IActionResult> AuthenticateUser(ChatUserLoginDTO loginUsersDTO)
+        public async Task<IActionResult> AuthenticateUser(LoginDto loginUsersDTO)
         {
             var query = from u in _appContext.ChatUsers
                         where u.Email == loginUsersDTO.Email
@@ -81,10 +81,12 @@ namespace ChatApiApplication.Services
                     {
                         UserId = user.UserId,
                         UserName = user.UserName,
-                        Email = user.Email,
-                        AccessToken = user.AccessToken,
+                        Email = user.Email
                     };
-                    return new OkObjectResult(userList);
+                    var tokenServices = tokenService.TokenGenerate(user);
+                    return new OkObjectResult(
+                       new { User = userList,
+                        tokenServices });
                 }
                 else
                 {
@@ -108,12 +110,10 @@ namespace ChatApiApplication.Services
                 _config["Jwt:Issuer"],
                 _config["Jwt:Audience"],
                 claims,
-                expires: DateTime.UtcNow.AddDays(10),
+                expires: DateTime.UtcNow.AddDays(2),
                 signingCredentials: signIn);
 
-
             string AccessToken = new JwtSecurityTokenHandler().WriteToken(token);
-
             return AccessToken;
 
         }

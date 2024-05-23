@@ -8,10 +8,9 @@ namespace ChatApiApplication.Services
     public interface IChatUserService
     {
         Task<bool> IsEmailUniqueAsync(string email);
-        Task<IActionResult> AddUserAsync(ChatUsersDTO usersDTO);
+        Task<IActionResult> AddUserAsync(RegisterDto usersDTO);
         Task<IActionResult> GetAllUsersAsync(IQueryable<Guid> userId);
-        Task<IActionResult> AuthenticateUser(ChatUserLoginDTO usersDTO);
-
+        Task<IActionResult> AuthenticateUser(LoginDto usersDTO);
         Task<List<MessagesDTO>> SearchMsgs(string msg);
         public string GetToken();
     }

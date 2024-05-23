@@ -1,160 +1,140 @@
 using AutoMapper;
+using ChatApiApplication;
 using ChatApiApplication.Automapper;
-using ChatApiApplication.CustomMiddleware;
 using ChatApiApplication.Data;
-using ChatApiApplication.Hubs;
 using ChatApiApplication.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.OAuth;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.Filters;
 using System.Text;
+using ChatApiApplication.CustomMiddleware;
+using Microsoft.AspNetCore.Authentication.Google;
 
-internal class Program
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddControllers();
+builder.Services.AddSwaggerGen();
+builder.Services.AddSignalR();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddEndpointsApiExplorer();
+
+var mapperConfiguration = new MapperConfiguration(cfg =>
 {
-    private static void Main(string[] args)
+    cfg.AddProfile(new AutoMapperProfileConfiguration());
+});
+IMapper mapper = mapperConfiguration.CreateMapper();
+builder.Services.AddSingleton(mapper);
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("JWT Token(Bearer)", new OpenApiSecurityScheme
     {
-        var builder = WebApplication.CreateBuilder(args);
+        In = ParameterLocation.Header,
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey
+    });
 
-        // Add services to the container.
-
-        builder.Services.AddControllers();
-        builder.Services.AddSignalR();
-        builder.Services.AddHttpContextAccessor();
-        MapperConfiguration mapperConfiguration = new MapperConfiguration(cfg =>
+      options.AddSecurityDefinition("Google", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.OAuth2,
+        Flows = new OpenApiOAuthFlows
         {
-            cfg.AddProfile(new AutoMapperProfileConfiguration());
-        });
-        IMapper mapper = mapperConfiguration.CreateMapper();
-        builder.Services.AddSingleton(mapper);
-
-        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-        builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen(option =>
-        {
-            option.SwaggerDoc("v1", new OpenApiInfo { Title = "Chat API", Version = "v1" });
-            option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            AuthorizationCode = new OpenApiOAuthFlow
             {
-                In = ParameterLocation.Header,
-                Description = "Please enter your JWT token into the textbox below",
-                Name = "Authorization",
-                Type = SecuritySchemeType.Http,
-                BearerFormat = "JWT",
-                Scheme = "Bearer"
-            });
-            option.AddSecurityRequirement(new OpenApiSecurityRequirement
-            {
-             {
-             new OpenApiSecurityScheme
-             {
-                 Reference = new OpenApiReference
-                 {
-                     Type=ReferenceType.SecurityScheme,
-                     Id="Bearer"
-                 }
-             },
-             new string[]{}
-        }
-        });
-            var oauth2Scheme = new OpenApiSecurityScheme
-            {
-                Type = SecuritySchemeType.OAuth2,
-                Flows = new OpenApiOAuthFlows
+                AuthorizationUrl = new Uri("https://accounts.google.com/o/oauth2/auth"),
+                TokenUrl = new Uri("https://oauth2.googleapis.com/token"),
+                Scopes = new Dictionary<string, string>
                 {
-                    AuthorizationCode = new OpenApiOAuthFlow
-                    {
-                        AuthorizationUrl = new Uri("https://accounts.google.com/o/oauth2/auth"),
-                        TokenUrl = new Uri("https://oauth2.googleapis.com/token"),
-                        Scopes = new Dictionary<string, string>
-                        {
-                            { "openid", "OpenID Connect" },
-                            { "profile", "User profile" },
-                            { "email", "User email" }
-                        }
-                    }
+                    { "openid", "OpenID Connect scope" },
+                    { "profile", "Access your basic profile info" },
+                    { "email", "Access your email address" }
                 }
-                
-            };
-            option.AddSecurityDefinition("oauth2", oauth2Scheme);
-            option.AddSecurityRequirement(new OpenApiSecurityRequirement
-        {
-            { oauth2Scheme, new string[] { "openid", "profile", "email" } }
-        });
-        });
-
-        builder.Services.AddAuthentication(options =>
-        {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-        }).AddJwtBearer(options =>
-        {
-            options.RequireHttpsMetadata = false;
-            options.SaveToken = true;
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ClockSkew = TimeSpan.Zero,
-                ValidIssuer = builder.Configuration["Jwt:Issuer"],           // Replace with your token issuer
-                ValidAudience = builder.Configuration["Jwt:Audience"],       // Replace with your token audience
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])) // Replace with your secret key
-            };
-        });
-        builder.Services.AddAuthentication().AddGoogle(options =>
-        {
-            IConfigurationSection googleAuthNSection = builder.Configuration.GetSection("Authentication:Google");
-            options.ClientId = "1055043777002-t3albpi7if9q1537k5abk78q2reqp6ic.apps.googleusercontent.com"; // googleAuthNSection["ClientId"];
-            options.ClientSecret = "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";//googleAuthNSection["ClientSecret"];
-            //options.ClientId = googleAuthNSection["ClientId"];
-            //options.ClientSecret = googleAuthNSection["ClientSecret"];
-            options.CallbackPath = "/signin-google";
-            options.Scope.Add("openid");
-            options.Scope.Add("profile");
-        });
-        
-        builder.Services.AddMvc();
-        builder.Services.AddAuthorization();
-        builder.Services.AddDbContext<ChatAPIDbContext>
-            (options => options.UseSqlServer
-            (builder.Configuration.GetConnectionString("ChatAPIConnectionString")));
-
-        builder.Services.AddScoped<IChatUserService, ChatUserService>();  
-        builder.Services.AddScoped<IMessagesService, MessagesService>();
-        var app = builder.Build();
-        using var scope = app.Services.CreateScope();
-        var services = scope.ServiceProvider;
-        var context = services.GetRequiredService<ChatAPIDbContext>();
-
-        // Configure the HTTP request pipeline.
-        if (app.Environment.IsDevelopment())
-        {
-           //app.UseclassWithNoImplementationMiddleware();
-           app.UseSwagger();
-           app.UseSwaggerUI(c =>
-           {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Your API V1");
-                c.OAuthClientId("1055043777002-t3albpi7if9q1537k5abk78q2reqp6ic.apps.googleusercontent.com");
-                c.OAuthAppName("ChatAPI - Swagger");
-                c.OAuthUsePkce();
-           });
+            }
         }
-        
-        app.MapHub<ChatHub>("chat-hub");
+    });
+   options.OperationFilter<SecurityRequirementsOperationFilter>();
+});
 
-        app.UseMiddleware<CustomMiddleware>();
-        
-        app.UseHttpsRedirection();
+builder.Services.AddDbContext<ChatAPIDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ChatAPIConnectionString")));
 
-        app.UseAuthorization();
+builder.Services.AddScoped<IChatUserService, ChatUserService>();
+builder.Services.AddScoped<IMessagesService, MessagesService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
 
-        app.UseAuthentication();
+builder.Services.AddAuthentication(x =>
+{
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("This is my 128 bits very long secret key...............................")),
+        ValidateAudience = false,
+        ValidateIssuer = false
+    };
+}).AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
+{
+    options.ClientId = "1055043777002-t3albpi7if9q1537k5abk78q2reqp6ic.apps.googleusercontent.com";
+    options.ClientSecret = "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";
+    options.CallbackPath = "/signin-google";
+});
 
-        app.MapControllers();
 
-        app.Run();
-    }
-    
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
+
+// Add HttpContextAccessor
+builder.Services.AddSingleton<IUrlHelper>(x =>
+{
+    var actionContext = x.GetRequiredService<IActionContextAccessor>().ActionContext;
+    return new UrlHelper(actionContext);
+});
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSwagger",
+        builder => builder.
+         WithOrigins("http://localhost:7187")
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials());
+});
+builder.Services.AddSingleton<IConnection<string>, connection<string>>();
+
+builder.Services.AddMvc();
+
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
+
+app.UseHttpsRedirection();
+
+//app.UseAuthentication();
+app.UseAuthorization();
+
+
+app.UseCors("AllowSwagger");
+app.MapHub<ChatHub>("/chat/hub");
+
+app.UseMiddleware<CustomMiddleware>();
+
+app.MapControllers();
+
+app.Run();

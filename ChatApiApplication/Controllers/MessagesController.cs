@@ -3,9 +3,11 @@ using ChatApiApplication.DTO;
 using ChatApiApplication.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace ChatApiApplication.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/")]
     public class MessagesController : Controller
@@ -33,76 +35,72 @@ namespace ChatApiApplication.Controllers
         //[Authorize]
         [HttpPost]
         [Route("messages")]
-        public async Task<IActionResult> SendMessage(MessagesDTO sendMsg)
+        public async Task<IActionResult> SendMessage(SendMessageRequest sendMsg)
         {
-            if (sendMsg != null && _jwtToken != null )
-            {
-                Guid userId = new Guid("3fa85f64-5717-4562-b3fc-2c963f66afa6");
-                sendMsg.SenderId = userId;
+            
+                //Guid userId = new Guid("3fa85f64-5717-4562-b3fc-2c963f66afa6");
+                //sendMsg.SenderId = userId;
+                if(sendMsg.SenderId == sendMsg.ReceiverId)
+                {
+                    return BadRequest("Sender and Receiver Id should be different");
+                }
+
                 var sendNewMsg = await _ims.SendMessageAsync(sendMsg);
                 var msgDtoResponse = new MessagesDTO()
                 {
-                    MessageId = sendMsg.MessageId,
-                    SenderId = userId,
-                    ReceiverId = sendMsg.ReceiverId,
-                    Content = sendMsg.Content, 
-                    Timestamp = sendMsg.Timestamp,
+                    MessageId = sendNewMsg.Value.MessageId,
+                    SenderId = sendNewMsg.Value.SenderId,
+                    ReceiverId = sendNewMsg.Value.ReceiverId,
+                    Content = sendNewMsg.Value.Content, 
+                    Timestamp = sendNewMsg.Value.Timestamp,
                 };
 
                 return Ok(msgDtoResponse);
 
-            }
-            else
-            {
-                return BadRequest("Please add message content to send");
-            }
         }
 
         [HttpPut]
-        [Route("messages/{updateMsgId:guid}")]
-        public async Task<IActionResult> EditMessage(Guid msgId, UpdateMsgDTO uMsgDTO)
+        [Route("messages/{msgId}")]
+        public async Task<IActionResult> EditMessage(Guid msgId, [Required]
+        [StringLength(1000, MinimumLength = 2)]string content)
         {
-            Guid userId = new Guid("1AC9689F-155C-4E33-C548-08DC73EA4971"); // temporary static sender ID
-            var orgMsg =  _ims.GetMessage(userId, msgId);
+          //  Guid userId = new Guid("1AC9689F-155C-4E33-C548-08DC73EA4971"); // temporary static sender ID
+            var orgMsg =  _ims.GetMessage (msgId);
 
             if (orgMsg!= null) { 
-                var updateMsg = await _ims.EditMessageAsync(msgId, uMsgDTO);
+                var updateMsg = await _ims.EditMessageAsync(msgId, content);
                 if (updateMsg != null)
                 {
-                    var newMsg = new MessagesDTO()
-                    {
-                        MessageId = uMsgDTO.MessageId,
-                        Content = uMsgDTO.Content
-                    };
-                    return Ok(updateMsg);
+                   
+                    return Ok("Message updated successfully.");
                 }
                 else {
                     return BadRequest("Msg could not be updated");
                 }
             } else
             {
-                return Unauthorized("Msg cannot be updated of other user");
+                return NotFound("Msg Not found for requested Id");
             }
         }
         [HttpDelete]
-        [Route("messages/{deleteMsgId:guid}")]
+        [Route("messages/{msgId}")]
 
         public async Task<IActionResult> DeleteMsg(Guid msgId)
         {
-            Guid userId = new Guid("1AC9689F-155C-4E33-C548-08DC73EA4971"); // temporary static sender ID
-            var orgMsg = _ims.GetMessage(userId, msgId);
+         //   Guid userId = new Guid("1AC9689F-155C-4E33-C548-08DC73EA4971"); // temporary static sender ID
+            var orgMsg = _ims.GetMessage(msgId);
             if(orgMsg!= null) { 
                 var deleteMsg = await _ims.DeleteMessageAsync(msgId);
-                return Ok("Message Deleted");
+                return Ok("Message Deleted Successfully");
             }
             else
             {
-                return Unauthorized("Msg cannot be deleted of other user");
+                return NotFound("Msg Not found for requested Id");
             }
         }
 
         [HttpGet]
-        [Route("messages/{userId:guid}")]
+        [Route("messages")]
         public async Task<IActionResult> RetriveConversationHistoryAsync([FromQuery] Guid userId,
             [FromQuery] DateTime? before = null,
             [FromQuery] int count = 20,

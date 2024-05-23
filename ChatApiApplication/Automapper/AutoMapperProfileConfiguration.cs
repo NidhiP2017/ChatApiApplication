@@ -5,10 +5,11 @@ namespace ChatApiApplication.Automapper
 {
     public class AutoMapperProfileConfiguration : Profile
     {
-        public AutoMapperProfileConfiguration() {
+        public AutoMapperProfileConfiguration()
+        {
 
             CreateMap<Messages, MessagesDTO>();
-            CreateMap<Conversations , MessagesDTO >()
+            CreateMap<Conversations, MessagesDTO>()
             .ForMember(dest => dest.MessageId, opt => opt.MapFrom(src => src.MessageId));
         }
     }

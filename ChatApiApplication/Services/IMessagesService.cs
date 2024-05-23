@@ -7,12 +7,10 @@ namespace ChatApiApplication.Services
 {
     public interface IMessagesService
     {
-        Task<IActionResult> SendMessageAsync(MessagesDTO msgDTO);
-        Task<IActionResult> EditMessageAsync(Guid msgId, UpdateMsgDTO uMsgDTO);
+        Task<ActionResult<MessagesDTO>> SendMessageAsync(SendMessageRequest msgDTO);
+        Task<IActionResult> EditMessageAsync(Guid msgId, string content);
         Task<IActionResult> DeleteMessageAsync(Guid msgId);
-
-        Messages GetMessage(Guid userId, Guid msgId);
-
+        Messages GetMessage(Guid msgId);
         Task<IActionResult> RetriveConversationHistoryAsync(Guid userId, DateTime? before, int count, string sort);
         //Task<IActionResult> RetriveMessageAsync(MessagesDTO msgDTO);
     }

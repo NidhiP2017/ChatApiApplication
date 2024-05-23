@@ -30,7 +30,7 @@ namespace ChatApiApplication.Controllers
 
         [HttpPost]
         [Route("register")]
-        public async Task<IActionResult> RegisterUser(ChatUsersDTO chatUsersDTO)
+        public async Task<IActionResult> RegisterUser(RegisterDto chatUsersDTO)
         {
             bool isEmailUnique = await _us.IsEmailUniqueAsync(chatUsersDTO.Email);
             if (!isEmailUnique)
@@ -40,9 +40,8 @@ namespace ChatApiApplication.Controllers
             else if (isEmailUnique && !string.IsNullOrWhiteSpace(chatUsersDTO.Email))
             {
                 await _us.AddUserAsync(chatUsersDTO);
-                var userDtoResponse = new ChatUsersDTO
-                {
-                    UserId = chatUsersDTO.UserId,
+                var userDtoResponse = new RegisterUserResponse
+                {                    
                     UserName = chatUsersDTO.UserName,
                     Email = chatUsersDTO.Email,
                 };
@@ -55,16 +54,15 @@ namespace ChatApiApplication.Controllers
             }
             
         }
-        //[Authorize]
+
+        [Authorize]
         [HttpGet]
         [Route("users")]
         public async Task<IActionResult> GetAllUsers()
         {
             if (_jwtToken != null) {
-                var uid = new Guid("1ac9689f-155c-4e33-c548-08dc73ea4971"); // temporary static sender ID
-                var userId = from u in _chatAPIDbContext.ChatUsers
-                                 //where u.AccessToken == _jwtToken
-                          where u.UserId == uid
+                //var uid = new Guid("1ac9689f-155c-4e33-c548-08dc73ea4971"); // temporary static sender ID
+                var userId = from u in _chatAPIDbContext.ChatUsers                                 
                           select u.UserId;
                 var GetAllUsersAsync = await _us.GetAllUsersAsync(userId);
                 return Ok(GetAllUsersAsync);
@@ -76,7 +74,7 @@ namespace ChatApiApplication.Controllers
         }
         [HttpPost]
         [Route("login")]
-        public async Task<IActionResult> LoginUser(ChatUserLoginDTO userDTO)
+        public async Task<IActionResult> LoginUser(LoginDto userDTO)
         {
             var user = await _us.AuthenticateUser(userDTO);
             return Ok(user);

@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using ChatApiApplication.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace ChatApiApplication.Hubs
 {
@@ -12,10 +14,12 @@ namespace ChatApiApplication.Hubs
             await Clients.All.SendAsync("recieved message", $"{Context.ConnectionId} has joined");
         }
 
-        public async Task SendMessage(string userId, string message)
+        public async Task SendMessage(string userID, string message)
         {
-            userId = "1ac9689f-155c-4e33-c548-08dc73ea4971";
-            await Clients.User(userId).SendAsync("ReceiveMessage", message);
+            //userID = "1ac9689f-155c-4e33-c548-08dc73ea4971";
+            await Clients.All.SendAsync("ReceiveMessage", userID, message);
         }
+
+        
     }
 }
