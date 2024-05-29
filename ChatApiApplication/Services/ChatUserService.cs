@@ -15,16 +15,18 @@ namespace ChatApiApplication.Services
     {
         private readonly ChatAPIDbContext _appContext;
         private readonly IConfiguration _config;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ITokenService tokenService;
         private readonly IMapper _imapper;
 
         public ChatUserService(IMapper imapper, ChatAPIDbContext context, IConfiguration config,
-            ITokenService tokenService)
+            ITokenService tokenService, IHttpContextAccessor httpContextAccessor)
         {
             _appContext = context;
             _imapper = imapper;
             _config = config;
             this.tokenService = tokenService;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<bool> IsEmailUniqueAsync(string email)
@@ -115,16 +117,17 @@ namespace ChatApiApplication.Services
 
             string AccessToken = new JwtSecurityTokenHandler().WriteToken(token);
             return AccessToken;
-
         }
 
         public async Task<List<MessagesDTO>> SearchMsgs(string msg)
         {
-            Guid userId = new Guid("1ac9689f-155c-4e33-c548-08dc73ea4971"); //static for now.
-            if (userId != null)
+            //Guid userId = new Guid("1ac9689f-155c-4e33-c548-08dc73ea4971"); //static for now.
+            var Id = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier) ? .Value;
+            Guid currentUserId = await _appContext.ChatUsers.Where(m => m.Id == Id).Select(u => u.UserId).FirstOrDefaultAsync();
+            if (currentUserId != null)
             {
                 var conversations = await _appContext.Messages
-                    .Where(c => (c.SenderId == userId || c.ReceiverId == userId) && c.Content.Contains(msg))
+                    .Where(c => (c.SenderId == currentUserId || c.ReceiverId == currentUserId) && c.Content.Contains(msg))
                     .AsNoTracking() //to disconnect from database
                     .ToListAsync();
                 if (conversations.Any())

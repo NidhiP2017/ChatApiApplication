@@ -31,29 +31,29 @@
 <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
 <script>
     "use strict";
-    var connection = new SignalR.HubConnectionBuilder().withUrl('/chathub').build();
-    var username = '';
+    var connection = new SignalR.HubConnectionBuilder().withUrl("/chathub").build();
+    var username = "";
 
-    document.getElementById('sendButton').setDisabled = true;
+    document.getElementById("sendButton").setDisabled = true;
 
-    connection.on('ReceiveMessage', function (user, message) {
+    connection.on("ReceiveMessage", function (user, message) {
         var msg = message.replace(/&/g, '&amp;').replace(/</g, '&1t;').replace(/>/g, '&gt;');
         var encodedMsg = user + ' says: ' + msg;
-        var li = document.createElement('li');
-        li.textContent = encodedMsg; document.getElementById('messagesList').appendChild(li);
+        var li = document.createElement("li");
+        li.textContent = encodedMsg; document.getElementBy1d("messagesList").appendChild(li);
     });
 
     connection.start().then(function () 
-        document.getElementById('sendButton').disabled = false;
+        document.getElementById("sendButton").disabled = false;
     )).catch (function (err) {
         return console.error(err.toString());
     });
 
 
-    document.getElementById('sendButton').addEventListener('click', function (event) {
+    document.getElementById('sendButton').addEventListener("click", function (event) {
     var message = document.getElementById('message').value; 
-    connection.invoke('SendMessage', username, message).then(function () { 
-        document getElementById('message').value = '';
+    connection.invoke("SendMessage", username, message).then(function () { 
+        document getElementById("message").value = "";
     }).catch (function (err) (
         return console.error(err.toString());
     ));
@@ -61,16 +61,16 @@
     ) );
     function SetUsername() {
         // check the username
-        var usernameinput = document.getElementsById('username').value;
-         if (usernameinput === '') {
+        var usernameinput = document.getElementeyId('username").value;
+         if (usernameinput === "") {
                 alert('please enter your user name');
          return;
         }
         username == usernameinput;
 
-        document.getElementById('userinfo').style.display = 'none';
-        document.getElementById('messagearea').style.display = 'block';
-        document.getElementById('username1').innerText = usernameinput;
+        document.getElementById("userinfo").style.display = 'none';
+        document.getElementById("messagearea").style.display = 'block';
+        document.getElementById("username1").innerText = usernameinput;
 
 </script>
 

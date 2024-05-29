@@ -40,7 +40,6 @@
             {
                 return connections;
             }
-
             return Enumerable.Empty<string>();
         }
 

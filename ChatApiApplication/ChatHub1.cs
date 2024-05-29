@@ -4,12 +4,12 @@ using System.Security.Claims;
 
 namespace ChatApiApplication
 {
-    public class ChatHub : Hub
+    public class ChatHub1 : Hub
     {
         private readonly connection<string> _connections = new connection<string>();
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ChatHub(IHttpContextAccessor httpContextAccessor)
+        public ChatHub1(IHttpContextAccessor httpContextAccessor)
         {
             Console.WriteLine("ChatHub instance created.");
 

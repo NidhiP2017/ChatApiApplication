@@ -1,6 +1,9 @@
-﻿using ChatApiApplication.Model;
-using Microsoft.AspNetCore.Authorization;
+﻿using ChatApiApplication.Data;
 using Microsoft.AspNetCore.SignalR;
+using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Threading.Tasks;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace ChatApiApplication.Hubs
@@ -8,18 +11,52 @@ namespace ChatApiApplication.Hubs
     //[Authorize]
     public class ChatHub : Hub
     {
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        public readonly ChatAPIDbContext _chatAPIDbContext;
+        public ChatHub(IHttpContextAccessor httpContextAccessor, ChatAPIDbContext chatAPIDbContext)
+        {
+            _httpContextAccessor = httpContextAccessor;
+            _chatAPIDbContext = chatAPIDbContext;
+        }
         public override async Task OnConnectedAsync()
         {
-            string connectionId = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJKV1RTZXJ2aWNlQWNjZXNzVG9rZW4iLCJqdGkiOiI5YTZiYWI1Zi1hN2VkLTRjOTktOWJkMy1iZDcxYTIwNWRmZTciLCJpYXQiOiIxNC0wNS0yMDI0IDA4OjIzOjM5IiwiZXhwIjoxNzE2NTM5MDE5LCJpc3MiOiJKV1RBdXRoZW50aWNhdGlvblNlcnZlciIsImF1ZCI6IkpXVFNlcnZpY2VQb3N0bWFuQ2xpZW50In0.toOyyedkk-qo55sVqXBwEoy50PKxNLp1aUGNaR316eg";
-            await Clients.All.SendAsync("recieved message", $"{Context.ConnectionId} has joined");
+            var connectionId = Context.ConnectionId;
+            await Clients.All.SendAsync("ReceiveMessage", $"{Context.ConnectionId} has joineddddddddd");
         }
 
-        public async Task SendMessage(string userID, string message)
+        public async Task SendToUser()
         {
-            //userID = "1ac9689f-155c-4e33-c548-08dc73ea4971";
-            await Clients.All.SendAsync("ReceiveMessage", userID, message);
+            Guid userId = new Guid("1AC9689F-155C-4E33-C548-08DC73EA4971");
+            await Clients.Client("k72N4KB2cTdVNets1j4QCQ==").SendAsync("ReceiveMsg", userId, "Hiii from SendToUser");
         }
 
-        
+        private async Task<string> GetUserId()
+        {
+            var query = Context.GetHttpContext().Request.Query;
+            var token = query["access_token"];
+
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new InvalidOperationException("Missing access_token in query string");
+            }
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.ReadJwtToken(token);
+            var userIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+
+            if (userIdClaim == null)
+            {
+                throw new InvalidOperationException("User ID claim not found in JWT token");
+            }
+            var userId = userIdClaim.Value;
+            return userId;
+        }
+
+        public async Task SendMessage(string username, string message)
+        {
+            await Clients.All.SendAsync("ReceiveMessage", $"{Context.ConnectionId}:{message}");
+            //await Clients.All.SendAsync("ReceiveMessage", username, message);
+        }
+
+      
     }
 }

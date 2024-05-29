@@ -19,10 +19,10 @@ namespace ChatApiApplication.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IConfiguration _config;
         private readonly static connection<string> _connections = new connection<string>();
-        private readonly IHubContext<ChatHub> _hubContext;
+        private readonly IHubContext<ChatHub1> _hubContext;
 
         public MessagesService(ChatAPIDbContext context, IConfiguration config,
-            IHubContext<ChatHub> hubContext, IHttpContextAccessor httpContextAccessor)
+            IHubContext<ChatHub1> hubContext, IHttpContextAccessor httpContextAccessor)
         {
             _appContext = context;
             _config = config;

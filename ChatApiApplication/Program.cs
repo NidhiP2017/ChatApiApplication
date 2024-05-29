@@ -16,6 +16,8 @@ using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 using ChatApiApplication.CustomMiddleware;
 using Microsoft.AspNetCore.Authentication.Google;
+using ChatApiApplication.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,12 +37,12 @@ builder.Services.AddSingleton(mapper);
 
 builder.Services.AddSwaggerGen(options =>
 {
-    options.AddSecurityDefinition("JWT Token(Bearer)", new OpenApiSecurityScheme
+    /*options.AddSecurityDefinition("JWT Token(Bearer)", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
         Name = "Authorization",
         Type = SecuritySchemeType.ApiKey
-    });
+    });*/
 
       options.AddSecurityDefinition("Google", new OpenApiSecurityScheme
     {
@@ -91,9 +93,6 @@ builder.Services.AddAuthentication(x =>
     options.ClientSecret = "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";
     options.CallbackPath = "/signin-google";
 });
-
-
-builder.Services.AddSignalR();
 builder.Services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
 
 // Add HttpContextAccessor
@@ -103,7 +102,7 @@ builder.Services.AddSingleton<IUrlHelper>(x =>
     return new UrlHelper(actionContext);
 });
 
-builder.Services.AddCors(options =>
+/*builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSwagger",
         builder => builder.
@@ -111,7 +110,11 @@ builder.Services.AddCors(options =>
         .AllowAnyMethod()
         .AllowAnyHeader()
         .AllowCredentials());
-});
+    options.AddPolicy("AllowSpecificOrigin",
+        builder => builder.WithOrigins("https://localhost:7187") // URL of the client project
+         .AllowAnyHeader()
+         .AllowAnyMethod());
+});*/
 builder.Services.AddSingleton<IConnection<string>, connection<string>>();
 
 builder.Services.AddMvc();
@@ -131,7 +134,13 @@ app.UseAuthorization();
 
 
 app.UseCors("AllowSwagger");
-app.MapHub<ChatHub>("/chat/hub");
+app.MapHub<ChatHub>("/chathub");
+
+app.MapPost("Broadcast", async (string message, ChatHub context) =>
+{
+    await context.Clients.All.SendAsync("ReceiveMessage", message);
+    return Results.NoContent();
+});
 
 app.UseMiddleware<CustomMiddleware>();
 
