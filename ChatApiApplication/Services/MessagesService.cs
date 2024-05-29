@@ -19,27 +19,37 @@ namespace ChatApiApplication.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IConfiguration _config;
         private readonly static connection<string> _connections = new connection<string>();
-        private readonly IHubContext<ChatHub1> _hubContext;
+       // private readonly IHubContext<ChatHub1> _hubContext;
 
         public MessagesService(ChatAPIDbContext context, IConfiguration config,
-            IHubContext<ChatHub1> hubContext, IHttpContextAccessor httpContextAccessor)
+             IHttpContextAccessor httpContextAccessor)
         {
             _appContext = context;
             _config = config;
-            this._hubContext = hubContext;
             _httpContextAccessor = httpContextAccessor;
         }
-        [Authorize]
         public async Task<ActionResult<MessagesDTO>> SendMessageAsync(SendMessageRequest msgDTO)
         {
             var Id = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier) ? .Value;
             Guid currentUserId = await _appContext.ChatUsers.Where(m => m.Id == Id).Select(u => u.UserId).FirstOrDefaultAsync();
             var checkSenderId = await _appContext.ChatUsers.FindAsync(msgDTO.SenderId);
             var checkReceiverId = await _appContext.ChatUsers.FindAsync(msgDTO.ReceiverId);
-          
-            if(checkSenderId == null && checkReceiverId == null)
+
+            if (checkSenderId == null)
             {
-                throw new NotFoundException("No Sender or Reciever ID found");
+                throw new InvalidOperationException("Unauthorized");
+            }
+            if (msgDTO == null || string.IsNullOrWhiteSpace(msgDTO.Content))
+            {
+                return new BadRequestObjectResult(new { Message = "Message content is required" });
+            }
+            if (checkReceiverId == null)
+            {
+                return new NotFoundObjectResult(new { Message = "Receiver Not Found" });
+            }
+            if (checkSenderId == checkReceiverId)
+            {
+                return new BadRequestObjectResult(new { Message = "Can not send a message to yourself." });
             }
             if (msgDTO != null)
             {
@@ -53,10 +63,10 @@ namespace ChatApiApplication.Services
                 await _appContext.Messages.AddAsync(newMsg);
                 await _appContext.SaveChangesAsync();
 
-                foreach (var connectionId in _connections.GetConnections(newMsg.ReceiverId.ToString()))
+                /*foreach (var connectionId in _connections.GetConnections(newMsg.ReceiverId.ToString()))
                 {
                     await _hubContext.Clients.Client(connectionId).SendAsync("BroadCast", newMsg);
-                }
+                }*/
                 var response = new MessagesDTO()
                 {
                     MessageId = newMsg.MessageId,
@@ -65,8 +75,7 @@ namespace ChatApiApplication.Services
                     Content = msgDTO.Content,
                     Timestamp = newMsg.Timestamp
                 };
-
-                return response;
+                return new OkObjectResult(response);
             }
             else
             {
@@ -76,13 +85,11 @@ namespace ChatApiApplication.Services
         [Authorize]
         public Messages GetMessage( Guid msgId)
         {
-
             var query = _appContext.Messages.FirstOrDefault(u => u.MessageId == msgId);
             if (query == null)
             {
                 return null;
             }
-
             return query;
         }
         public async Task<IActionResult> EditMessageAsync(Guid msgId, string content)

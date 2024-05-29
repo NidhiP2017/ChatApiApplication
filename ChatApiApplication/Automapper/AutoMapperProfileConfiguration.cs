@@ -9,8 +9,7 @@ namespace ChatApiApplication.Automapper
         {
 
             CreateMap<Messages, MessagesDTO>();
-            CreateMap<Conversations, MessagesDTO>()
-            .ForMember(dest => dest.MessageId, opt => opt.MapFrom(src => src.MessageId));
+            
         }
     }
 }

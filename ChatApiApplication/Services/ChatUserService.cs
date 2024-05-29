@@ -15,18 +15,19 @@ namespace ChatApiApplication.Services
     {
         private readonly ChatAPIDbContext _appContext;
         private readonly IConfiguration _config;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ITokenService tokenService;
         private readonly IMapper _imapper;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ChatUserService(IMapper imapper, ChatAPIDbContext context, IConfiguration config,
-            ITokenService tokenService, IHttpContextAccessor httpContextAccessor)
+
+        public ChatUserService(IHttpContextAccessor httpContextAccessor ,IMapper imapper, ChatAPIDbContext context, IConfiguration config,
+            ITokenService tokenService)
         {
             _appContext = context;
             _imapper = imapper;
             _config = config;
-            this.tokenService = tokenService;
             _httpContextAccessor = httpContextAccessor;
+            this.tokenService = tokenService;
         }
 
         public async Task<bool> IsEmailUniqueAsync(string email)
@@ -121,7 +122,6 @@ namespace ChatApiApplication.Services
 
         public async Task<List<MessagesDTO>> SearchMsgs(string msg)
         {
-            //Guid userId = new Guid("1ac9689f-155c-4e33-c548-08dc73ea4971"); //static for now.
             var Id = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier) ? .Value;
             Guid currentUserId = await _appContext.ChatUsers.Where(m => m.Id == Id).Select(u => u.UserId).FirstOrDefaultAsync();
             if (currentUserId != null)

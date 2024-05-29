@@ -4,6 +4,7 @@ using ChatApiApplication.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 
 namespace ChatApiApplication.Controllers
 {
@@ -22,9 +23,9 @@ namespace ChatApiApplication.Controllers
         {
             _ims = ims;
             _httpContextAccessor = httpContextAccessor;
-            _jwtToken = _httpContextAccessor.HttpContext.Request.Headers["Authorization"];
             _chatAPIDbContext = chatAPIDbContext;
-            _jwtToken = (_jwtToken != null )?_jwtToken.Substring("Bearer ".Length).Trim() : ""; // to remove Bearer string from Token
+           /* _jwtToken = _httpContextAccessor.HttpContext.Request.Headers["Authorization"];
+            _jwtToken = (_jwtToken != null )?_jwtToken.Substring("Bearer ".Length).Trim() : ""; // to remove Bearer string from Token*/
 
             var query = from u in _chatAPIDbContext.ChatUsers
                         where u.AccessToken == _jwtToken
@@ -35,22 +36,11 @@ namespace ChatApiApplication.Controllers
         [Authorize]
         [HttpPost]
         [Route("messages")]
-        public async Task<IActionResult> SendMessage(SendMessageRequest sendMsg)
+        public async Task<IActionResult> SendMessage([FromBody] SendMessageRequest sendMsg)
         {
-            if(sendMsg.SenderId == sendMsg.ReceiverId)
-            {
-              return BadRequest("Sender and Receiver Id should be different");
-            }
+            var currentUserId = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var sendNewMsg = await _ims.SendMessageAsync(sendMsg);
-            var msgDtoResponse = new MessagesDTO()
-            {
-                MessageId = sendNewMsg.Value.MessageId,
-                SenderId = sendNewMsg.Value.SenderId,
-                ReceiverId = sendNewMsg.Value.ReceiverId,
-                Content = sendNewMsg.Value.Content, 
-                Timestamp = sendNewMsg.Value.Timestamp,
-            };
-            return Ok(msgDtoResponse);
+            return Ok(sendNewMsg);
         }
         [Authorize]
         [HttpPut]
