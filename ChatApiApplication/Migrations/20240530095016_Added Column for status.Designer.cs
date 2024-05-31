@@ -4,6 +4,7 @@ using ChatApiApplication.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ChatApiApplication.Migrations
 {
     [DbContext(typeof(ChatAPIDbContext))]
-    partial class ChatAPIDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240530095016_Added Column for status")]
+    partial class AddedColumnforstatus
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -82,9 +85,6 @@ namespace ChatApiApplication.Migrations
 
                     b.Property<string>("UserName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("profilePhoto")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("userStatus")

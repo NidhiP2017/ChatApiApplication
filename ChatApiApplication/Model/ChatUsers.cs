@@ -21,6 +21,9 @@ namespace ChatApiApplication.Model
         [DataType(DataType.Password)]
         public string Password { get; set; }
         public string AccessToken { get; set; }
+        [RegularExpression(@"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", ErrorMessage = "Invalid Status")]
+        public string? userStatus { get; set; }
+        public string? profilePhoto { get; set; }
 
     }
 }

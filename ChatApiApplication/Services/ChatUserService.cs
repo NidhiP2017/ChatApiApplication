@@ -2,10 +2,13 @@
 using ChatApiApplication.Data;
 using ChatApiApplication.DTO;
 using ChatApiApplication.Model;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Web.Helpers;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Text;
 
@@ -18,16 +21,18 @@ namespace ChatApiApplication.Services
         private readonly ITokenService tokenService;
         private readonly IMapper _imapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
 
         public ChatUserService(IHttpContextAccessor httpContextAccessor ,IMapper imapper, ChatAPIDbContext context, IConfiguration config,
-            ITokenService tokenService)
+            ITokenService tokenService, IWebHostEnvironment webHostEnvironment)
         {
             _appContext = context;
             _imapper = imapper;
             _config = config;
             _httpContextAccessor = httpContextAccessor;
             this.tokenService = tokenService;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         public async Task<bool> IsEmailUniqueAsync(string email)
@@ -44,7 +49,8 @@ namespace ChatApiApplication.Services
                 UserName = usersDTO.UserName,
                 Email = usersDTO.Email,
                 Password = encryptedPwd,
-                AccessToken = " "
+                AccessToken = " ",
+                userStatus = usersDTO.userStatus
             };
             await _appContext.ChatUsers.AddAsync(newUser);
             await _appContext.SaveChangesAsync();
@@ -145,6 +151,51 @@ namespace ChatApiApplication.Services
             {
                 return null; 
             }
+        }
+
+        public async Task<IActionResult> UpdateStatus(Guid userId, string status)
+        {
+            if (userId != null)
+            {
+                var user = await _appContext.ChatUsers.FindAsync(userId);
+                user.userStatus = status;
+                await _appContext.SaveChangesAsync();
+                return new OkObjectResult("Status updated to: "+status);            
+            }
+            else
+            {
+                return new OkObjectResult("Could not find user");
+            }
+        }
+
+        public async Task<IActionResult> UploadPhoto(List<IFormFile> files)
+        {
+            var Id = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Guid currentUserId = await _appContext.ChatUsers.Where(m => m.Id == Id).Select(u => u.UserId).FirstOrDefaultAsync();
+
+            if (files.Count == 0)
+                return new OkObjectResult("No file was uploaded");
+
+
+            string directoryPath = Path.Combine(_webHostEnvironment.ContentRootPath, "UploadedFiles");
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+            foreach (var file in files)
+            {
+                var fileExtension = Path.GetExtension(file.FileName).ToLower();
+                if (!allowedExtensions.Contains(fileExtension))
+                {
+                    return new OkObjectResult("Invalid file type.");
+                }
+                string filePath = Path.Combine(directoryPath, file.FileName+"_"+currentUserId);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    file.CopyTo(stream);
+                }
+                var user = await _appContext.ChatUsers.FindAsync(currentUserId);
+                user.profilePhoto = Path.Combine(directoryPath, file.FileName);
+                await _appContext.SaveChangesAsync();
+            }
+            return new OkObjectResult("Upload Successful");
         }
     }
 }

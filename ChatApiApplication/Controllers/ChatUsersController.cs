@@ -3,8 +3,12 @@ using ChatApiApplication.Data;
 using ChatApiApplication.DTO;
 using ChatApiApplication.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using System;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Web.Helpers;
+using System.Net.Http.Headers;
+using System.Security.Claims;
 
 namespace ChatApiApplication.Controllers
 {
@@ -15,7 +19,6 @@ namespace ChatApiApplication.Controllers
         public readonly IChatUserService _us;
         private readonly ChatAPIDbContext _chatAPIDbContext;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        
 
         public ChatUsersController(IHttpContextAccessor httpContextAccessor, IChatUserService userservice, ChatAPIDbContext chatAPIDbContext)
         {
@@ -78,6 +81,26 @@ namespace ChatApiApplication.Controllers
             return Ok(msgs);
         }
 
+        [Authorize]
+        [HttpPut]
+        [Route("UpdateStatus")]
+        public async Task<IActionResult> UpdateStatus(string status)
+        {
+            var Id = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Guid currentUserId = await _chatAPIDbContext.ChatUsers.Where(m => m.Id == Id).Select(u => u.UserId).FirstOrDefaultAsync();
+
+            var u = await _us.UpdateStatus(currentUserId, status);
+            return Ok(u);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [Route("UploadPhoto")]
+        public async Task<IActionResult> Upload([FromForm] List<IFormFile> files)
+        {
+            var profile = await _us.UploadPhoto(files);
+            return Ok(profile);
+        }
 
     }
 }

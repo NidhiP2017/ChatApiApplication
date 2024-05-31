@@ -12,6 +12,8 @@ namespace ChatApiApplication.Services
         Task<IActionResult> GetAllUsersAsync(IQueryable<Guid> userId);
         Task<IActionResult> AuthenticateUser(LoginDto usersDTO);
         Task<List<MessagesDTO>> SearchMsgs(string msg);
+        Task<IActionResult> UpdateStatus(Guid userId, string status);
+        Task<IActionResult> UploadPhoto(List<IFormFile>files);
         public string GetToken();
     }
 
