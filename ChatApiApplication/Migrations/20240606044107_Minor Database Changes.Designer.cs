@@ -4,6 +4,7 @@ using ChatApiApplication.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ChatApiApplication.Migrations
 {
     [DbContext(typeof(ChatAPIDbContext))]
-    partial class ChatAPIDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240606044107_Minor Database Changes")]
+    partial class MinorDatabaseChanges
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -187,8 +190,8 @@ namespace ChatApiApplication.Migrations
                     b.Property<int?>("GroupId")
                         .HasColumnType("int");
 
-                    b.Property<Guid?>("ParentMessageId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("MessageType")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("ReceiverId")
                         .HasColumnType("uniqueidentifier");
@@ -208,7 +211,7 @@ namespace ChatApiApplication.Migrations
 
             modelBuilder.Entity("ChatApiApplication.Model.GroupMembers", b =>
                 {
-                    b.HasOne("ChatApiApplication.Model.Group", "Group")
+                    b.HasOne("ChatApiApplication.Model.Group", null)
                         .WithMany("GroupMembers")
                         .HasForeignKey("GroupId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -219,8 +222,6 @@ namespace ChatApiApplication.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Group");
 
                     b.Navigation("User");
                 });

@@ -14,6 +14,8 @@ using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 using ChatApiApplication.CustomMiddleware;
 using ChatApiApplication.Hubs;
+using ChatApiApplication.Interfaces;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -48,6 +50,7 @@ builder.Services.AddDbContext<ChatAPIDbContext>(options =>
 
 builder.Services.AddScoped<IChatUserService, ChatUserService>();
 builder.Services.AddScoped<IMessagesService, MessagesService>();
+builder.Services.AddScoped<IGroupService, GroupService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
 builder.Services.AddAuthentication(x =>

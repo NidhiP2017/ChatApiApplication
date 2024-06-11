@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using ChatApiApplication.Data;
 using ChatApiApplication.DTO;
-using ChatApiApplication.Services;
+using ChatApiApplication.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;

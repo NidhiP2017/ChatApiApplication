@@ -1,6 +1,7 @@
 ﻿using ChatApiApplication.Data;
 using ChatApiApplication.DTO;
 using ChatApiApplication.Exceptions;
+using ChatApiApplication.Interfaces;
 using ChatApiApplication.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace ChatApiApplication.Services
@@ -19,7 +21,8 @@ namespace ChatApiApplication.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IConfiguration _config;
         private readonly static connection<string> _connections = new connection<string>();
-       // private readonly IHubContext<ChatHub1> _hubContext;
+        private readonly GroupService _groupService;
+        // private readonly IHubContext<ChatHub1> _hubContext;
 
         public MessagesService(ChatAPIDbContext context, IConfiguration config,
              IHttpContextAccessor httpContextAccessor)
@@ -27,6 +30,17 @@ namespace ChatApiApplication.Services
             _appContext = context;
             _config = config;
             _httpContextAccessor = httpContextAccessor;
+            //_groupService = groupService;
+        }
+
+        public async Task<Guid> GetCurrentLoggedInUser()
+        {
+            var Id = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Guid currentUserId = await _appContext.ChatUsers.Where(m => m.Id == Id).Select(u => u.UserId).FirstOrDefaultAsync();
+            if (currentUserId == null)
+                return Guid.Empty;
+            else
+                return currentUserId;
         }
         public async Task<ActionResult<MessagesDTO>> SendMessageAsync(SendMessageRequest msgDTO)
         {
@@ -154,6 +168,40 @@ namespace ChatApiApplication.Services
             var messages = await query.ToListAsync();
             return new OkObjectResult(messages);
             
+        }
+
+        public async Task<IActionResult> ReplyToMsg(int? groupId, Guid messageId, ThreadMessageDTO messageRequest)
+        {
+            var parentMsg = GetMessage(messageId);
+            var currentUserId = await GetCurrentLoggedInUser();
+            
+            if (string.IsNullOrEmpty(messageRequest.Content))
+            {
+                throw new ArgumentException("Message is required.");
+            }
+            else
+            {
+                var message = new Messages
+                {
+                    Content = messageRequest.Content,
+                    SenderId = currentUserId,
+                    ReceiverId = parentMsg.ReceiverId,
+                    ParentMessageId = parentMsg.MessageId,
+                    GroupId = (groupId != null)?groupId: null,
+                    Timestamp = DateTime.Now,
+                };
+                await _appContext.Messages.AddAsync(message);
+                await _appContext.SaveChangesAsync();
+
+                var response = new
+                {
+                    senderId = currentUserId,
+                    content = messageRequest.Content,
+                    GroupId = (groupId != null) ? groupId : null,
+                    timestamp = message.Timestamp
+                };
+                return new OkObjectResult(response);
+            }
         }
     }
 

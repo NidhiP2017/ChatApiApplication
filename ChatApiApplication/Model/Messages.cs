@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using ChatApiApplication.Enums;
+using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -8,6 +9,9 @@ namespace ChatApiApplication.Model
     {
         [Key]
         public Guid MessageId { get; set; }
+        public Guid? ParentMessageId { get; set; }
+        [ForeignKey("GroupId")]
+        public int? GroupId { get; set; }
         [ForeignKey("UserId")]
         public Guid SenderId { get; set; }
         [ForeignKey("UserId")]

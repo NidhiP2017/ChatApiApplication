@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using ChatApiApplication.Data;
 using ChatApiApplication.DTO;
+using ChatApiApplication.Interfaces;
 using ChatApiApplication.Model;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -175,7 +176,6 @@ namespace ChatApiApplication.Services
 
             if (files.Count == 0)
                 return new OkObjectResult("No file was uploaded");
-
 
             string directoryPath = Path.Combine(_webHostEnvironment.ContentRootPath, "UploadedFiles");
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };

@@ -3,7 +3,7 @@ using ChatApiApplication.Model;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace ChatApiApplication.Services
+namespace ChatApiApplication.Interfaces
 {
     public interface IChatUserService
     {
@@ -13,7 +13,7 @@ namespace ChatApiApplication.Services
         Task<IActionResult> AuthenticateUser(LoginDto usersDTO);
         Task<List<MessagesDTO>> SearchMsgs(string msg);
         Task<IActionResult> UpdateStatus(Guid userId, string status);
-        Task<IActionResult> UploadPhoto(List<IFormFile>files);
+        Task<IActionResult> UploadPhoto(List<IFormFile> files);
         public string GetToken();
     }
 

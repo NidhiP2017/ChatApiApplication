@@ -1,6 +1,6 @@
 ﻿using ChatApiApplication.Data;
 using ChatApiApplication.DTO;
-using ChatApiApplication.Services;
+using ChatApiApplication.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
@@ -24,13 +24,7 @@ namespace ChatApiApplication.Controllers
             _ims = ims;
             _httpContextAccessor = httpContextAccessor;
             _chatAPIDbContext = chatAPIDbContext;
-           /* _jwtToken = _httpContextAccessor.HttpContext.Request.Headers["Authorization"];
-            _jwtToken = (_jwtToken != null )?_jwtToken.Substring("Bearer ".Length).Trim() : ""; // to remove Bearer string from Token*/
-
-            var query = from u in _chatAPIDbContext.ChatUsers
-                        where u.AccessToken == _jwtToken
-                        select u.UserId;
-            userId = query.FirstOrDefault();
+           
         }
 
         [Authorize]
@@ -44,7 +38,7 @@ namespace ChatApiApplication.Controllers
         }
         [Authorize]
         [HttpPut]
-        [Route("messages/{msgId}")]
+        [Route("editMessages/{msgId}")]
         public async Task<IActionResult> EditMessage(Guid msgId, [Required]
         [StringLength(1000, MinimumLength = 2)]string content)
         {
@@ -61,7 +55,7 @@ namespace ChatApiApplication.Controllers
         }
         [Authorize]
         [HttpDelete]
-        [Route("messages/{msgId}")]
+        [Route("deleteMessages/{msgId}")]
 
         public async Task<IActionResult> DeleteMsg(Guid msgId)
         {
@@ -87,6 +81,14 @@ namespace ChatApiApplication.Controllers
 
             var messages = await _ims.RetriveConversationHistoryAsync(userId, before, count, sort);
             return Ok(messages);
+        }
+
+        [Authorize]
+        [HttpPost("{messageId}/replyInThread")]
+        /*reply to a particular message in thread*/
+        public async Task<IActionResult> ReplyToMsg(Guid messageId, [FromBody] ThreadMessageDTO messageRequest)
+        {
+            return await _ims.ReplyToMsg(null, messageId, messageRequest);
         }
     }
 }

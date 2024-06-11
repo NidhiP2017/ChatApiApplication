@@ -9,5 +9,7 @@ namespace ChatApiApplication.Data
         public DbSet<ChatUsers> ChatUsers { get; set; }
         public DbSet<Messages> Messages { get; set; }
         public DbSet<Log> Logs { get; set; }
+        public DbSet<Group> Groups { get; set; }
+        public DbSet<GroupMembers> GroupMembers { get; set; }    
     }
 }

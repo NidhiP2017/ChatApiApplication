@@ -4,6 +4,7 @@ using ChatApiApplication.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ChatApiApplication.Migrations
 {
     [DbContext(typeof(ChatAPIDbContext))]
-    partial class ChatAPIDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240604100118_Group_Table_added")]
+    partial class GroupTableadded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -112,7 +115,7 @@ namespace ChatApiApplication.Migrations
                     b.ToTable("Groups");
                 });
 
-            modelBuilder.Entity("ChatApiApplication.Model.GroupMembers", b =>
+            modelBuilder.Entity("ChatApiApplication.Model.GroupMember", b =>
                 {
                     b.Property<int>("MemberId")
                         .ValueGeneratedOnAdd()
@@ -137,10 +140,6 @@ namespace ChatApiApplication.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("MemberId");
-
-                    b.HasIndex("GroupId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("GroupMembers");
                 });
@@ -187,8 +186,8 @@ namespace ChatApiApplication.Migrations
                     b.Property<int?>("GroupId")
                         .HasColumnType("int");
 
-                    b.Property<Guid?>("ParentMessageId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("MessageType")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("ReceiverId")
                         .HasColumnType("uniqueidentifier");
@@ -201,42 +200,7 @@ namespace ChatApiApplication.Migrations
 
                     b.HasKey("MessageId");
 
-                    b.HasIndex("GroupId");
-
                     b.ToTable("Messages");
-                });
-
-            modelBuilder.Entity("ChatApiApplication.Model.GroupMembers", b =>
-                {
-                    b.HasOne("ChatApiApplication.Model.Group", "Group")
-                        .WithMany("GroupMembers")
-                        .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ChatApiApplication.Model.ChatUsers", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Group");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("ChatApiApplication.Model.Messages", b =>
-                {
-                    b.HasOne("ChatApiApplication.Model.Group", null)
-                        .WithMany("Messages")
-                        .HasForeignKey("GroupId");
-                });
-
-            modelBuilder.Entity("ChatApiApplication.Model.Group", b =>
-                {
-                    b.Navigation("GroupMembers");
-
-                    b.Navigation("Messages");
                 });
 #pragma warning restore 612, 618
         }
