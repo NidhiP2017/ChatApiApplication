@@ -28,11 +28,18 @@ namespace ChatApiApplication.Controllers
         }
 
         [Authorize]
+        [HttpPost("/getAllMyMessages")]
+        public async Task<IActionResult> getAllMyMessages()
+        {
+            var messages = await _ims.getAllMyMessages();
+            return Ok(messages);
+        }
+
+        [Authorize]
         [HttpPost]
         [Route("messages")]
         public async Task<IActionResult> SendMessage([FromBody] SendMessageRequest sendMsg)
         {
-            var currentUserId = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var sendNewMsg = await _ims.SendMessageAsync(sendMsg);
             return Ok(sendNewMsg);
         }

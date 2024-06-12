@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace ChatApiApplication.Model
 {
@@ -20,6 +21,7 @@ namespace ChatApiApplication.Model
         [StringLength(1000, MinimumLength = 2)]
         public string Content { get; set; }
         public DateTime Timestamp { get; set; }
-
+        [JsonIgnore]
+        public ChatUsers User { get; set; }
     }
 }

@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.SignalR;
 namespace ChatApiApplication.Controllers
 {
     [ApiController]
-    [Route("api/sendmessages")]
+    [Route("api/broadcastMessages")]
     public class ChatMsgController : ControllerBase
     {
         private readonly IHubContext<ChatHub> _hubContext;

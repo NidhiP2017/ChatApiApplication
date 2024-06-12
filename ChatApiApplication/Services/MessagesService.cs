@@ -1,4 +1,6 @@
-﻿using ChatApiApplication.Data;
+﻿using AutoMapper.Execution;
+using Azure;
+using ChatApiApplication.Data;
 using ChatApiApplication.DTO;
 using ChatApiApplication.Exceptions;
 using ChatApiApplication.Interfaces;
@@ -10,6 +12,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
@@ -202,6 +205,32 @@ namespace ChatApiApplication.Services
                 };
                 return new OkObjectResult(response);
             }
+        }
+
+        public async Task<IActionResult> getAllMyMessages()
+        {
+            var Id = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Guid currentUserId = await _appContext.ChatUsers.Where(m => m.Id == Id).Select(u => u.UserId).FirstOrDefaultAsync();
+
+            var groups = await _appContext.Groups
+                        .Include(g => g.Messages)
+                            .ThenInclude(m => m.User)  // Ensure user is included with the message
+                        .Where(g => g.GroupMembers.Any(gm => gm.UserId == currentUserId))
+                        .ToListAsync();
+            
+            foreach (var group in groups)
+            {
+                foreach (var message in group.Messages)
+                {
+                    var response = new
+                    {
+                        UserName = message.User?.UserName ?? "Unknown User",
+                        content = message.Content
+                    };
+                    return new OkObjectResult(response);
+                }
+            }
+            return new OkObjectResult("Outsidee");
         }
     }
 
