@@ -47,7 +47,7 @@ namespace ChatApiApplication.Services
         }
         public async Task<ActionResult<MessagesDTO>> SendMessageAsync(SendMessageRequest msgDTO)
         {
-            var Id = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier) ? .Value;
+            var Id = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             Guid currentUserId = await _appContext.ChatUsers.Where(m => m.Id == Id).Select(u => u.UserId).FirstOrDefaultAsync();
             var checkSenderId = await _appContext.ChatUsers.FindAsync(msgDTO.SenderId);
             var checkReceiverId = await _appContext.ChatUsers.FindAsync(msgDTO.ReceiverId);
@@ -100,7 +100,7 @@ namespace ChatApiApplication.Services
             }
         }
         [Authorize]
-        public Messages GetMessage( Guid msgId)
+        public Messages GetMessage(Guid msgId)
         {
             var query = _appContext.Messages.FirstOrDefault(u => u.MessageId == msgId);
             if (query == null)
@@ -141,11 +141,11 @@ namespace ChatApiApplication.Services
             if (deleteMsgId != null)
             {
                 var msg = await _appContext.Messages.FindAsync(deleteMsgId);
-                if(msg.SenderId != currentUserId)
+                if (msg.SenderId != currentUserId)
                 {
                     return new OkObjectResult("You cannot delete others msg");
                 }
-                if (msg != null )
+                if (msg != null)
                 {
                     _appContext.Remove(msg);
                     await _appContext.SaveChangesAsync();
@@ -170,14 +170,14 @@ namespace ChatApiApplication.Services
             query = query.Take(count);
             var messages = await query.ToListAsync();
             return new OkObjectResult(messages);
-            
+
         }
 
         public async Task<IActionResult> ReplyToMsg(int? groupId, Guid messageId, ThreadMessageDTO messageRequest)
         {
             var parentMsg = GetMessage(messageId);
             var currentUserId = await GetCurrentLoggedInUser();
-            
+
             if (string.IsNullOrEmpty(messageRequest.Content))
             {
                 throw new ArgumentException("Message is required.");
@@ -190,7 +190,7 @@ namespace ChatApiApplication.Services
                     SenderId = currentUserId,
                     ReceiverId = parentMsg.ReceiverId,
                     ParentMessageId = parentMsg.MessageId,
-                    GroupId = (groupId != null)?groupId: null,
+                    GroupId = (groupId != null) ? groupId : null,
                     Timestamp = DateTime.Now,
                 };
                 await _appContext.Messages.AddAsync(message);
@@ -207,30 +207,60 @@ namespace ChatApiApplication.Services
             }
         }
 
-        public async Task<IActionResult> getAllMyMessages()
+        public async Task<List<MessageGroupDTO>> getAllMyMessages()
         {
             var Id = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            Guid currentUserId = await _appContext.ChatUsers.Where(m => m.Id == Id).Select(u => u.UserId).FirstOrDefaultAsync();
+            Guid currentUserId = await _appContext.ChatUsers.Where(m => m.Id == Id)
+                .Select(u => u.UserId).FirstOrDefaultAsync();
 
-            var groups = await _appContext.Groups
-                        .Include(g => g.Messages)
-                            .ThenInclude(m => m.User)  // Ensure user is included with the message
-                        .Where(g => g.GroupMembers.Any(gm => gm.UserId == currentUserId))
-                        .ToListAsync();
-            
-            foreach (var group in groups)
-            {
-                foreach (var message in group.Messages)
-                {
-                    var response = new
-                    {
-                        UserName = message.User?.UserName ?? "Unknown User",
-                        content = message.Content
-                    };
-                    return new OkObjectResult(response);
-                }
-            }
-            return new OkObjectResult("Outsidee");
+
+           /* var groups = await _appContext.GroupMembers
+            .Where(gm => gm.UserId == currentUserId)
+            .Select(gm => gm.GroupId)
+            .Distinct()
+            .ToListAsync();*/
+
+            /*var userMessages = await (from m in _appContext.Messages
+                                      join u in _appContext.ChatUsers on m.SenderId equals u.UserId
+                                      where m.GroupId == 1
+                                      select new MessagesDTO
+                                      {
+                                          MessageId = m.MessageId,
+                                          SenderId = u.UserId,
+                                          ReceiverId = m.ReceiverId,
+                                          ParentMessageId = m.ParentMessageId,
+                                          GroupId = m.GroupId,
+                                          Content = m.Content,
+                                          Timestamp = m.Timestamp
+                                      }).ToListAsync();
+*/
+            var userMessages = _appContext.Messages
+               .Where(m => m.SenderId == currentUserId && m.GroupId != null)
+               //.Include(m => m.Group)
+               //.Include(m => m.User)
+               /*.Select(m => new
+               {
+                   GroupId = m.GroupId,
+                   GroupName = m.Group != null ? m.Group.GroupName : null,
+                   UserName = m.User.UserName,
+                   MessageContent = m.Content
+               })*/
+               .ToList();
+
+            var messageGroup = new List<MessageGroupDTO>();
+            //userMessages.ForEach(a =>
+            //{
+            //    messageGroup.Add(new MessageGroupDTO()
+            //    {
+            //        GroupId = a.GroupId,
+            //        GroupName = a.GroupName,
+            //        UserName = a.UserName,
+            //        MessageContent = a.MessageContent
+            //    });
+            //});
+            return messageGroup;
+
+           
         }
     }
 

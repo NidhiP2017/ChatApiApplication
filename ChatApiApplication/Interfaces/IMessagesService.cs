@@ -15,6 +15,6 @@ namespace ChatApiApplication.Interfaces
         Task<IActionResult> RetriveConversationHistoryAsync(Guid userId, DateTime? before, int count, string sort);
         //Task<IActionResult> RetriveMessageAsync(MessagesDTO msgDTO);
         Task<IActionResult> ReplyToMsg(int? groupId, Guid messageId, ThreadMessageDTO messageRequest);
-        Task<IActionResult> getAllMyMessages();
+        Task<List<MessageGroupDTO>> getAllMyMessages();
     }
 }

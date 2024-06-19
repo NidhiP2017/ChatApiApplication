@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using ChatApiApplication.Model;
 
 namespace ChatApiApplication.DTO
 {
@@ -18,7 +19,17 @@ namespace ChatApiApplication.DTO
         public int? GroupId { get; set; }
         [Required]
         [StringLength(1000, MinimumLength = 2)]
-        public string Content { get; set; }        
+        public string Content { get; set; }
         public DateTime Timestamp { get; set; }
+        public Group Group { get; set; }
+        public ChatUsers User { get; set; }
+    }
+
+    public class MessageGroupDTO
+    {
+        public int? GroupId { get; set; }
+        public string GroupName { get; set; }
+        public string UserName { get; set; }
+        public string  MessageContent { get; set; }
     }
 }

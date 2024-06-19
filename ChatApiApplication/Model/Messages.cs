@@ -11,17 +11,19 @@ namespace ChatApiApplication.Model
         [Key]
         public Guid MessageId { get; set; }
         public Guid? ParentMessageId { get; set; }
-        [ForeignKey("GroupId")]
+        [ForeignKey("Group")]
         public int? GroupId { get; set; }
-        [ForeignKey("UserId")]
+        //[ForeignKey("SenderUser")]
         public Guid SenderId { get; set; }
-        [ForeignKey("UserId")]
+        //[ForeignKey("RecieverUser")]
         public Guid ReceiverId { get; set;}
         [Required]
         [StringLength(1000, MinimumLength = 2)]
         public string Content { get; set; }
         public DateTime Timestamp { get; set; }
-        [JsonIgnore]
-        public ChatUsers User { get; set; }
+        /*[JsonIgnore]
+        public virtual ChatUsers RecieverUser { get; set; }
+        public virtual ChatUsers SenderUser { get; set; }*/
+        public Group Group { get; set; }
     }
 }

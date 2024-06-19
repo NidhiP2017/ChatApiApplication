@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using ChatApiApplication.Model;
+using System.ComponentModel.DataAnnotations;
 
 namespace ChatApiApplication.DTO
 {
@@ -6,7 +7,6 @@ namespace ChatApiApplication.DTO
     {
         [Required(ErrorMessage = "Group name is required.")]
         public string GroupName { get; set; }
-
 
     }
 }
